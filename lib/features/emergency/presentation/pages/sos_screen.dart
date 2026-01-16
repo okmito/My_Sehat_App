@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
-
-import 'sos_screen.dart'; // Import to use the locationProvider defined in original (or I can re-define it if I overwrite).
+import 'package:go_router/go_router.dart';
 
 // Re-defining for safety if I overwrite the whole file
 import 'package:geolocator/geolocator.dart';
 import 'package:permission_handler/permission_handler.dart';
+import '../providers/emergency_contacts_provider.dart';
 
 final locationProvider = FutureProvider<Position?>((ref) async {
   final permission = await Permission.location.request();
@@ -70,6 +70,34 @@ class _SOSScreenState extends ConsumerState<SOSScreen>
     }
   }
 
+  void _showConfirmationDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text("Confirm SOS"),
+        content: const Text(
+            "Are you sure you want to send an emergency SOS signal?\nThis will notify your emergency contacts."),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text("Cancel"),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              _triggerSOS();
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text("Send SOS"),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -90,41 +118,54 @@ class _SOSScreenState extends ConsumerState<SOSScreen>
             Center(
               child: Column(
                 children: [
-                  GestureDetector(
-                    onTap: _isSending ? null : _triggerSOS,
-                    child: AnimatedBuilder(
-                      animation: _controller,
-                      builder: (context, child) {
-                        return Container(
-                          width: 180,
-                          height: 180,
-                          decoration: BoxDecoration(
-                            color: Colors.red,
-                            shape: BoxShape.circle,
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.red.withOpacity(0.5),
-                                blurRadius: 20 + (_controller.value * 20),
-                                spreadRadius: 5 + (_controller.value * 10),
-                              )
-                            ],
+                  AnimatedBuilder(
+                    animation: _controller,
+                    builder: (context, child) {
+                      return Container(
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.red.withOpacity(0.5),
+                              blurRadius: 20 + (_controller.value * 20),
+                              spreadRadius: 5 + (_controller.value * 10),
+                            )
+                          ],
+                        ),
+                        child: Material(
+                          color: Colors.red,
+                          shape: const CircleBorder(),
+                          clipBehavior: Clip.antiAlias,
+                          child: InkWell(
+                            onTap: _isSending
+                                ? null
+                                : () => _showConfirmationDialog(context),
+                            customBorder: const CircleBorder(),
+                            child: Container(
+                              width: 180,
+                              height: 180,
+                              decoration: const BoxDecoration(
+                                shape: BoxShape.circle,
+                                // Color moved to Material
+                              ),
+                              child: Center(
+                                child: _isSending
+                                    ? const CircularProgressIndicator(
+                                        color: Colors.white)
+                                    : const Text(
+                                        "SOS",
+                                        style: TextStyle(
+                                          fontSize: 48,
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                              ),
+                            ),
                           ),
-                          child: Center(
-                            child: _isSending
-                                ? const CircularProgressIndicator(
-                                    color: Colors.white)
-                                : const Text(
-                                    "SOS",
-                                    style: TextStyle(
-                                      fontSize: 48,
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                          ),
-                        );
-                      },
-                    ),
+                        ),
+                      );
+                    },
                   ),
                   const SizedBox(height: 16),
                   Text(
@@ -143,24 +184,14 @@ class _SOSScreenState extends ConsumerState<SOSScreen>
                 Text("Emergency Contacts",
                     style: GoogleFonts.outfit(
                         fontSize: 18, fontWeight: FontWeight.bold)),
-                TextButton(onPressed: () {}, child: const Text("Edit"))
+                TextButton(
+                  onPressed: () => context.push('/emergency-contacts'),
+                  child: const Text("Manage"),
+                ),
               ],
             ),
             const SizedBox(height: 8),
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                children: [
-                  _ContactAvatar(name: "Mom", color: Colors.purple),
-                  const SizedBox(width: 16),
-                  _ContactAvatar(name: "Dad", color: Colors.blue),
-                  const SizedBox(width: 16),
-                  _ContactAvatar(name: "Wife", color: Colors.pink),
-                  const SizedBox(width: 16),
-                  _AddContactButton(),
-                ],
-              ),
-            ),
+            _EmergencyContactsList(),
             const SizedBox(height: 32),
 
             // Nearby Hospitals
@@ -205,6 +236,63 @@ class _SOSScreenState extends ConsumerState<SOSScreen>
   }
 }
 
+class _EmergencyContactsList extends ConsumerWidget {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final contacts = ref.watch(emergencyContactsProvider);
+
+    if (contacts.isEmpty) {
+      return Container(
+        padding: const EdgeInsets.all(24),
+        decoration: BoxDecoration(
+          color: Colors.grey[100],
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.grey[300]!),
+        ),
+        child: Column(
+          children: [
+            Icon(Icons.contact_phone_outlined,
+                size: 40, color: Colors.grey[400]),
+            const SizedBox(height: 8),
+            Text(
+              'No emergency contacts added',
+              style: GoogleFonts.outfit(color: Colors.grey[600]),
+            ),
+            const SizedBox(height: 4),
+            TextButton(
+              onPressed: () => context.push('/emergency-contacts'),
+              child: const Text('Add contacts in Profile'),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        children: contacts.map((contact) {
+          final colors = [
+            Colors.purple,
+            Colors.blue,
+            Colors.green,
+            Colors.orange,
+            Colors.pink
+          ];
+          final color = colors[contacts.indexOf(contact) % colors.length];
+          return Padding(
+            padding: const EdgeInsets.only(right: 16),
+            child: _ContactAvatar(
+              name: contact.relationship ?? contact.name,
+              color: color,
+            ),
+          );
+        }).toList(),
+      ),
+    );
+  }
+}
+
 class _ContactAvatar extends StatelessWidget {
   final String name;
   final Color color;
@@ -223,23 +311,6 @@ class _ContactAvatar extends StatelessWidget {
         ),
         const SizedBox(height: 8),
         Text(name, style: GoogleFonts.outfit(fontSize: 14)),
-      ],
-    );
-  }
-}
-
-class _AddContactButton extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        CircleAvatar(
-          radius: 30,
-          backgroundColor: Colors.grey[200],
-          child: const Icon(Icons.add, color: Colors.black),
-        ),
-        const SizedBox(height: 8),
-        Text("Add", style: GoogleFonts.outfit(fontSize: 14)),
       ],
     );
   }

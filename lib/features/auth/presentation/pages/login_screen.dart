@@ -16,21 +16,30 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   bool _isOtpSent = false;
 
   void _onSendOtp() {
-    if (_phoneController.text.isNotEmpty) {
-      setState(() {
-        _isOtpSent = true;
-      });
+    final phone = _phoneController.text.trim();
+    if (phone.isEmpty || phone.length != 10 || int.tryParse(phone) == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("OTP '123456' sent to your phone")),
+        const SnackBar(
+          content: Text("Please enter a valid 10-digit phone number"),
+          backgroundColor: Colors.red,
+        ),
       );
+      return;
     }
+
+    setState(() {
+      _isOtpSent = true;
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text("OTP '123456' sent to your phone")),
+    );
   }
 
   void _onLogin() {
     ref.read(authStateProvider.notifier).login(
-      _phoneController.text.trim(),
-      _otpController.text.trim(),
-    );
+          _phoneController.text.trim(),
+          _otpController.text.trim(),
+        );
   }
 
   @override
@@ -44,7 +53,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         },
         error: (err, stack) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(err.toString()), backgroundColor: Colors.red),
+            SnackBar(
+                content: Text(err.toString()), backgroundColor: Colors.red),
           );
         },
       );
@@ -78,9 +88,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               TextField(
                 controller: _phoneController,
                 keyboardType: TextInputType.phone,
+                maxLength: 10,
                 decoration: const InputDecoration(
                   labelText: "Phone Number",
                   prefixIcon: Icon(Icons.phone),
+                  counterText: "", // Hide character counter
                 ),
                 enabled: !_isOtpSent && !isLoading,
               ),

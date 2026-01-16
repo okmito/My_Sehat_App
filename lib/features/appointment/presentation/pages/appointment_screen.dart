@@ -100,28 +100,6 @@ class _OnlineAppointmentTab extends StatelessWidget {
           price: "\$50",
           onBook: () {},
         ),
-        const SizedBox(height: 20),
-        Container(
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: Colors.blue.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Colors.blue.withOpacity(0.3)),
-          ),
-          child: Row(
-            children: [
-              const Icon(Icons.info_outline, color: Colors.blue),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  "By booking an online consultation, you consent to sharing your basic health records with the doctor.",
-                  style:
-                      GoogleFonts.outfit(fontSize: 12, color: Colors.blue[800]),
-                ),
-              ),
-            ],
-          ),
-        )
       ],
     );
   }

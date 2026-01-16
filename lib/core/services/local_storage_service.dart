@@ -7,7 +7,12 @@ class LocalStorageService {
     await Hive.initFlutter();
     Hive.registerAdapter(UserModelAdapter());
     await Hive.openBox<UserModel>('users');
+    await Hive.openBox<Map<dynamic, dynamic>>('emergency_contacts');
+    await Hive.openBox<dynamic>('settings');
   }
 
   Box<UserModel> get userBox => Hive.box<UserModel>('users');
+  Box<Map<dynamic, dynamic>> get emergencyContactsBox =>
+      Hive.box<Map<dynamic, dynamic>>('emergency_contacts');
+  Box<dynamic> get settingsBox => Hive.box<dynamic>('settings');
 }

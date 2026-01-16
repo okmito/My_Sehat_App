@@ -84,18 +84,23 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             _ProfileOptionTile(
                 icon: Icons.contact_phone,
                 title: "Emergency Contacts",
-                onTap: () {}),
+                onTap: () => context.push('/emergency-contacts')),
             _ProfileOptionTile(
                 icon: Icons.language,
                 title: "Language Selection",
-                onTap: () {}),
+                onTap: () => context.push('/language-selection')),
             _ProfileOptionTile(
-                icon: Icons.info_outline, title: "App Info", onTap: () {}),
+                icon: Icons.info_outline,
+                title: "App Info",
+                onTap: () => context.push('/app-info')),
+            _ProfileOptionTile(
+                icon: Icons.help_outline,
+                title: "Help & Support",
+                onTap: () => context.push('/help-support')),
             _ProfileOptionTile(
                 icon: Icons.settings,
                 title: "Settings",
-                onTap: () {} // Could expand
-                ),
+                onTap: () => context.push('/settings')),
             _ProfileOptionTile(
                 icon: Icons.logout,
                 title: "Logout",
@@ -147,25 +152,38 @@ class _ProfileOptionTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
-      decoration: BoxDecoration(
+      child: Material(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-      ),
-      child: ListTile(
-        onTap: onTap,
-        leading: Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: color.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(10),
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(16),
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: color.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Icon(icon, color: color),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Text(
+                    title,
+                    style: GoogleFonts.outfit(
+                        color: color, fontWeight: FontWeight.w500),
+                  ),
+                ),
+                Icon(Icons.arrow_forward_ios_rounded,
+                    size: 16, color: color.withOpacity(0.5)),
+              ],
+            ),
           ),
-          child: Icon(icon, color: color),
         ),
-        title: Text(title,
-            style:
-                GoogleFonts.outfit(color: color, fontWeight: FontWeight.w500)),
-        trailing: Icon(Icons.arrow_forward_ios_rounded,
-            size: 16, color: color.withOpacity(0.5)),
       ),
     );
   }

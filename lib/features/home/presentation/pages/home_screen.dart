@@ -76,18 +76,22 @@ class _HomeHeader extends StatelessWidget {
         Row(
           children: [
             IconButton(
-              onPressed: () {}, // Query placeholder
+              onPressed: () => context.push('/help-support'),
               icon:
                   const Icon(Icons.help_outline_rounded, color: Colors.black54),
             ),
-            GestureDetector(
-              onTap: () => context.push('/profile'),
-              child: CircleAvatar(
-                backgroundColor:
-                    Theme.of(context).primaryColor.withOpacity(0.1),
-                radius: 24,
-                child:
-                    Icon(Icons.person, color: Theme.of(context).primaryColor),
+            Material(
+              color: Colors.transparent,
+              child: InkWell(
+                borderRadius: BorderRadius.circular(24),
+                onTap: () => context.push('/profile'),
+                child: CircleAvatar(
+                  backgroundColor:
+                      Theme.of(context).primaryColor.withOpacity(0.1),
+                  radius: 24,
+                  child:
+                      Icon(Icons.person, color: Theme.of(context).primaryColor),
+                ),
               ),
             ),
           ],
@@ -106,7 +110,7 @@ class _HeroSection extends StatelessWidget {
       children: [
         Expanded(
           child: _HeroCard(
-            title: "Doc\nAppointment",
+            title: "Doctor\nAppointment",
             icon: Icons.calendar_today_rounded,
             color: Colors.indigo,
             onTap: () {
@@ -143,38 +147,43 @@ class _HeroCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        height: 160,
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          color: color.withOpacity(0.1),
-          borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: color.withOpacity(0.2)),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                shape: BoxShape.circle,
+    return Material(
+      color: color.withOpacity(0.1),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(24),
+        side: BorderSide(color: color.withOpacity(0.2)),
+      ),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(24),
+        splashColor: color.withOpacity(0.2),
+        highlightColor: color.withOpacity(0.1),
+        onTap: onTap,
+        child: Container(
+          height: 160,
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(icon, color: color, size: 28),
               ),
-              child: Icon(icon, color: color, size: 28),
-            ),
-            Text(
-              title,
-              style: GoogleFonts.outfit(
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-                color: Colors.black87,
-                height: 1.2,
-              ),
-            )
-          ],
+              Text(
+                title,
+                style: GoogleFonts.outfit(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.black87,
+                  height: 1.2,
+                ),
+              )
+            ],
+          ),
         ),
       ),
     );
@@ -236,37 +245,58 @@ class _DiagnosticsItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Column(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(20),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
-                  blurRadius: 10,
-                  offset: const Offset(0, 4),
-                ),
-              ],
+    return Column(
+      children: [
+        Material(
+          color: Colors.white,
+          // borderRadius removed because it conflicts with shape potentially,
+          // or we can just use shape if we wanted border.
+          // But here specifically, I didn't set shape above, I set borderRadius.
+          // Wait, in previous turn I set:
+          // borderRadius: BorderRadius.circular(20),
+          // elevation: 2,
+          // In the code I read back:
+          // borderRadius: BorderRadius.circular(20),
+          // elevation: 2,
+          // There IS NO shape here. So why did I think there was?
+          // Ah, check the code again.
+          // _DiagnosticsItem ONLY has borderRadius, NO shape.
+          // So _DiagnosticsItem might NOT be the one crashing?
+          // The error log mentioned: _HeroCard and _HealthListTile.
+          // _DiagnosticsItem was NOT in the error log.
+          // I will leave _DiagnosticsItem alone if it only has borderRadius.
+          // Reviewing code:
+          // lines 249-253: borderRadius: BorderRadius.circular(20), elevation: 2. NO SHAPE.
+          // So this chunk is UNNECESSARY. I will skip this chunk.
+          // WAIT, verifying _HealthcareListTile which IS in error log.
+          elevation: 2,
+          borderRadius: BorderRadius.circular(20),
+          shadowColor: Colors.black.withOpacity(0.3),
+          child: InkWell(
+            onTap: onTap,
+            borderRadius: BorderRadius.circular(20),
+            child: Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(20),
+                // decorations moved to Material to allow ripple
+              ),
+              child:
+                  Icon(icon, size: 32, color: Theme.of(context).primaryColor),
             ),
-            child: Icon(icon, size: 32, color: Theme.of(context).primaryColor),
           ),
-          const SizedBox(height: 8),
-          Text(
-            label,
-            textAlign: TextAlign.center,
-            style: GoogleFonts.outfit(
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
-              color: Colors.grey[700],
-            ),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          label,
+          textAlign: TextAlign.center,
+          style: GoogleFonts.outfit(
+            fontSize: 14,
+            fontWeight: FontWeight.w500,
+            color: Colors.grey[700],
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }
@@ -318,31 +348,35 @@ class _HealthListTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
-      decoration: BoxDecoration(
+      child: Material(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey.shade200),
-      ),
-      child: ListTile(
-        onTap: onTap,
-        leading: Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: Colors.blue.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(12),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: BorderSide(color: Colors.grey.shade200),
+        ),
+        child: ListTile(
+          onTap: onTap,
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          leading: Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: Colors.blue.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(icon, color: Colors.blue),
           ),
-          child: Icon(icon, color: Colors.blue),
+          title: Text(
+            title,
+            style: GoogleFonts.outfit(fontWeight: FontWeight.w600),
+          ),
+          subtitle: Text(
+            subtitle,
+            style: GoogleFonts.outfit(fontSize: 12),
+          ),
+          trailing: const Icon(Icons.arrow_forward_ios_rounded,
+              size: 16, color: Colors.grey),
         ),
-        title: Text(
-          title,
-          style: GoogleFonts.outfit(fontWeight: FontWeight.w600),
-        ),
-        subtitle: Text(
-          subtitle,
-          style: GoogleFonts.outfit(fontSize: 12),
-        ),
-        trailing: const Icon(Icons.arrow_forward_ios_rounded,
-            size: 16, color: Colors.grey),
       ),
     );
   }
@@ -383,17 +417,31 @@ class _QuickActionChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Chip(
-      avatar: Icon(icon, size: 18, color: Colors.white),
-      label: Text(
-        label,
-        style: GoogleFonts.outfit(
-            color: Colors.white, fontWeight: FontWeight.w500),
+    return Material(
+      color: color.withOpacity(0.8),
+      borderRadius: BorderRadius.circular(20),
+      child: InkWell(
+        onTap: () {}, // Placeholder for action
+        borderRadius: BorderRadius.circular(20),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, size: 18, color: Colors.white),
+              const SizedBox(width: 8),
+              Text(
+                label,
+                style: GoogleFonts.outfit(
+                    color: Colors.white, fontWeight: FontWeight.w500),
+              ),
+            ],
+          ),
+        ),
       ),
-      backgroundColor: color.withOpacity(0.8),
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      side: BorderSide.none,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
     );
   }
 }

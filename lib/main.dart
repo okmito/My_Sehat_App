@@ -4,6 +4,8 @@ import 'core/theme/app_theme.dart';
 import 'core/router/app_router.dart';
 import 'core/services/local_storage_service.dart';
 import 'features/auth/presentation/providers/auth_provider.dart';
+import 'features/emergency/presentation/providers/emergency_contacts_provider.dart';
+import 'core/providers/language_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -15,6 +17,12 @@ void main() async {
     ProviderScope(
       overrides: [
         localStorageServiceProvider.overrideWithValue(localStorage),
+        emergencyContactsProvider.overrideWith(
+          (ref) => EmergencyContactsNotifier(localStorage.emergencyContactsBox),
+        ),
+        languageProvider.overrideWith(
+          (ref) => LanguageNotifier(localStorage.settingsBox),
+        ),
       ],
       child: const MySehatApp(),
     ),

@@ -1,20 +1,26 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../../../features/auth/presentation/providers/auth_provider.dart';
+
 import '../../../features/auth/presentation/pages/login_screen.dart';
 import '../../../features/auth/presentation/pages/profile_screen.dart';
 import '../../../features/home/presentation/pages/home_screen.dart';
 import '../../../features/emergency/presentation/pages/sos_screen.dart';
+import '../../../features/emergency/presentation/pages/emergency_contacts_screen.dart';
 import '../../../features/symptom_check/presentation/pages/symptom_checker_screen.dart';
 import '../../../features/mental_health/presentation/pages/mental_health_screen.dart';
 import '../../../features/appointment/presentation/pages/appointment_screen.dart';
 import '../../../features/intro/presentation/pages/splash_screen.dart';
+import '../../../features/settings/presentation/pages/language_selection_screen.dart';
+import '../../../features/settings/presentation/pages/app_info_screen.dart';
+import '../../../features/settings/presentation/pages/help_support_screen.dart';
+import '../../../features/settings/presentation/pages/settings_screen.dart';
 import 'main_wrapper_screen.dart';
-import '../presentation/pages/placeholder_screens.dart';
+
+import '../../../features/search/presentation/pages/search_screen.dart';
+import '../../../features/notifications/presentation/pages/notifications_screen.dart';
+import '../../../features/history/presentation/pages/history_screen.dart';
 
 final goRouterProvider = Provider<GoRouter>((ref) {
-  // final authState = ref.watch(authStateProvider);
-
   return GoRouter(
     initialLocation: '/', // Start at Splash
     redirect: (context, state) {
@@ -91,6 +97,14 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const ProfileScreen(),
       ),
       GoRoute(
+        path: '/emergency-contacts',
+        builder: (context, state) => const EmergencyContactsScreen(),
+      ),
+      GoRoute(
+        path: '/language-selection',
+        builder: (context, state) => const LanguageSelectionScreen(),
+      ),
+      GoRoute(
         path: '/appointment',
         builder: (context, state) => const AppointmentScreen(),
       ),
@@ -106,6 +120,18 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/mental_health',
         builder: (context, state) => const MentalHealthScreen(),
+      ),
+      GoRoute(
+        path: '/app-info',
+        builder: (context, state) => const AppInfoScreen(),
+      ),
+      GoRoute(
+        path: '/help-support',
+        builder: (context, state) => const HelpSupportScreen(),
+      ),
+      GoRoute(
+        path: '/settings',
+        builder: (context, state) => const SettingsScreen(),
       ),
     ],
   );
