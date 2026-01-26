@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 // Simple entity
@@ -99,7 +100,9 @@ class MentalHealthScreen extends ConsumerWidget {
                 title: "Chat with AI Companion (Anonymous)",
                 icon: Icons.chat_bubble,
                 color: Colors.teal,
-                onTap: () {},
+                onTap: () {
+                  context.push('/ai_chat');
+                },
                 isWide: true),
 
             const SizedBox(height: 24),

@@ -210,6 +210,87 @@ class _SectionTitle extends StatelessWidget {
 class _DiagnosticsRow extends StatelessWidget {
   const _DiagnosticsRow();
 
+  void _showSymptomCheckerModal(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true, // Allow it to take needed height safely
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (modalContext) => SingleChildScrollView(
+        padding: EdgeInsets.only(
+            bottom: MediaQuery.of(modalContext).viewInsets.bottom),
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).primaryColor.withValues(alpha: 0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  Icons.medical_services_outlined,
+                  size: 48,
+                  color: Theme.of(context).primaryColor,
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                "AI Diagnostic Assistant",
+                textAlign: TextAlign.center,
+                style: GoogleFonts.outfit(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black87,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                "Describe your symptoms or upload an image to get a preliminary triage assessment.\n\nNote: This is an AI tool and does not replace professional medical advice.",
+                textAlign: TextAlign.center,
+                style: GoogleFonts.outfit(
+                  fontSize: 14,
+                  color: Colors.grey[600],
+                  height: 1.5,
+                ),
+              ),
+              const SizedBox(height: 24),
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.pop(modalContext); // Close modal
+                  // Use the outer 'context' which is still valid and mounted (HomeScreen)
+                  context.push('/diagnostics/chat');
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Theme.of(context).primaryColor,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  elevation: 0,
+                ),
+                child: Text(
+                  "Start Assessment",
+                  style: GoogleFonts.outfit(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Row(
@@ -217,12 +298,12 @@ class _DiagnosticsRow extends StatelessWidget {
       children: [
         _DiagnosticsItem(
           icon: Icons.medical_services_outlined,
-          label: "Symptom\nChecker",
-          onTap: () => context.push('/symptom'),
+          label: "Health\nAssessment",
+          onTap: () => _showSymptomCheckerModal(context),
         ),
         _DiagnosticsItem(
           icon: Icons.add_a_photo_outlined,
-          label: "Image\nUploader",
+          label: "Health\nRecord",
           onTap: () {}, // TODO
         ),
         _DiagnosticsItem(
