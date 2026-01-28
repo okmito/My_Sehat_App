@@ -137,9 +137,10 @@ class DiagnosticsResultScreen extends ConsumerWidget {
   }
 
   Widget _buildListCard(List<String> items, {bool isWarning = false}) {
-    if (items.isEmpty)
+    if (items.isEmpty) {
       return _buildCard(
           child: const Text("None provided."), isWarning: isWarning);
+    }
 
     return _buildCard(
       isWarning: isWarning,

@@ -44,12 +44,11 @@ class _DiagnosticsChatScreenState extends ConsumerState<DiagnosticsChatScreen> {
     final state = ref.read(diagnosticsProvider);
     // If completed or just started (only greeting), allow exit
     if (state.finalResult != null || state.messages.length <= 1) {
-      if (context.mounted) {
-        if (context.canPop()) {
-          context.pop();
-        } else {
-          context.go('/home');
-        }
+      if (!mounted) return;
+      if (context.canPop()) {
+        context.pop();
+      } else {
+        context.go('/home');
       }
       return;
     }
@@ -75,7 +74,9 @@ class _DiagnosticsChatScreenState extends ConsumerState<DiagnosticsChatScreen> {
       ),
     );
 
-    if (shouldExit == true && context.mounted) {
+    if (!mounted) return;
+
+    if (shouldExit == true) {
       if (context.canPop()) {
         context.pop();
       } else {
@@ -100,10 +101,11 @@ class _DiagnosticsChatScreenState extends ConsumerState<DiagnosticsChatScreen> {
       }
     });
 
-    return WillPopScope(
-      onWillPop: () async {
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) async {
+        if (didPop) return;
         await _handleBackPress();
-        return false;
       },
       child: Scaffold(
         backgroundColor: Colors.white,
@@ -260,6 +262,7 @@ class _DiagnosticsChatScreenState extends ConsumerState<DiagnosticsChatScreen> {
         ref.read(diagnosticsProvider.notifier).sendImage(image);
       }
     } catch (e) {
+      if (!mounted) return;
       // Handle picker error
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Failed to pick image: $e")),
@@ -305,9 +308,9 @@ class _ChatMessageBubble extends StatelessWidget {
             children: [
               if (message.imageUrl != null)
                 _buildImagePreview(message.imageUrl),
-              if (message.text != null && message.text!.isNotEmpty)
+              if (message.text.isNotEmpty)
                 Text(
-                  message.text!,
+                  message.text,
                   style: GoogleFonts.outfit(
                     color: textColor,
                     fontSize: 16,

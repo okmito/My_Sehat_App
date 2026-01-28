@@ -77,7 +77,7 @@ build_log.txt
 !.env.example
 
 # Analysis and logs
-analysis.json
+analysis*.json
 analysis*.txt
 cleanup_report.txt
 analysis_results.txt

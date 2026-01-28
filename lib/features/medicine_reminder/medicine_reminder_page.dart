@@ -177,7 +177,9 @@ class _MedicineReminderPageState extends ConsumerState<MedicineReminderPage>
       final selectedDateOnly = DateUtils.dateOnly(_selectedDate);
       if (selectedDateOnly.isBefore(creationDateOnly)) continue;
       if (med.endDate != null &&
-          selectedDateOnly.isAfter(DateUtils.dateOnly(med.endDate!))) continue;
+          selectedDateOnly.isAfter(DateUtils.dateOnly(med.endDate!))) {
+        continue;
+      }
 
       if (med.scheduleType == 'Daily') {
         for (var time in med.times) {
@@ -273,8 +275,7 @@ class _MedicineReminderPageState extends ConsumerState<MedicineReminderPage>
                     itemBuilder: (context, index) {
                       final item = schedule[index];
                       final isTaken = item['status'] == 'TAKEN';
-                      final isMissed = item['status'] ==
-                          'MISSED'; // Should we support specific 'Missed' in history? For now PENDING/TAKEN logic dominates.
+                      // final isMissed = item['status'] == 'MISSED'; // Should we support specific 'Missed' in history? For now PENDING/TAKEN logic dominates.
 
                       return Card(
                         elevation: 2,

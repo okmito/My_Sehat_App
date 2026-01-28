@@ -85,7 +85,7 @@ class _AiTriageChatScreenState extends ConsumerState<AiTriageChatScreen> {
         _isTyping = false;
       });
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        const SnackBar(
           content: Text("Couldn't reach AI service. Please check connection."),
           backgroundColor: Colors.redAccent,
         ),

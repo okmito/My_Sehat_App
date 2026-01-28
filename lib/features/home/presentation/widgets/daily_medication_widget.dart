@@ -120,9 +120,9 @@ class _DailyMedicationWidgetState extends ConsumerState<DailyMedicationWidget> {
     ScaffoldMessenger.of(context).clearSnackBars(); // Immediate replacement
 
     if (currentStatus == 'MISSED') {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: const Text("You missed this medication time. ☹️"),
-        duration: const Duration(seconds: 2),
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text("You missed this medication time. ☹️"),
+        duration: Duration(seconds: 2),
         behavior: SnackBarBehavior.floating,
         backgroundColor: Colors.red,
       ));
@@ -149,9 +149,9 @@ class _DailyMedicationWidgetState extends ConsumerState<DailyMedicationWidget> {
     final endWindow = medTime.add(const Duration(minutes: 60));
 
     if (now.isBefore(startWindow)) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: const Text("It's too early to take this medication. 😴"),
-        duration: const Duration(seconds: 2),
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text("It's too early to take this medication. 😴"),
+        duration: Duration(seconds: 2),
         behavior: SnackBarBehavior.floating,
         backgroundColor: Colors.orange,
       ));
@@ -160,9 +160,9 @@ class _DailyMedicationWidgetState extends ConsumerState<DailyMedicationWidget> {
 
     if (now.isAfter(endWindow)) {
       // This case handles PENDING items that are past their window (effectively missed but not yet marked/refreshed)
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: const Text("You missed the time window. ☹️"),
-        duration: const Duration(seconds: 2),
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text("You missed the time window. ☹️"),
+        duration: Duration(seconds: 2),
         behavior: SnackBarBehavior.floating,
         backgroundColor: Colors.red,
       ));
@@ -170,9 +170,9 @@ class _DailyMedicationWidgetState extends ConsumerState<DailyMedicationWidget> {
     }
 
     ref.read(medicineProvider.notifier).toggleStatusByKey(id, key, 'TAKEN');
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: const Text("Great! You've taken this medication. 😊"),
-      duration: const Duration(seconds: 2),
+    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+      content: Text("Great! You've taken this medication. 😊"),
+      duration: Duration(seconds: 2),
       behavior: SnackBarBehavior.floating,
       backgroundColor: Colors.green,
     ));
@@ -385,7 +385,7 @@ class _DailyMedicationWidgetState extends ConsumerState<DailyMedicationWidget> {
                     final medTime = _parseTime(med['time']);
                     if (isToday &&
                         DateTime.now()
-                            .isAfter(medTime.add(Duration(minutes: 60)))) {
+                            .isAfter(medTime.add(const Duration(minutes: 60)))) {
                       statusColor = Colors.red;
                       statusIcon = Icons.error_rounded;
                       statusText = "Missed";

@@ -49,12 +49,14 @@ dependencies:
 
   # Local Storage
   shared_preferences: ^2.2.2
+  signature: ^5.5.0
+  flame: ^1.16.0
+  audioplayers: ^6.0.0
 
-  image_picker: any
-  signature: any
-  flame: any
-  shared_preferences: any
-  audioplayers: any
+
+  latlong2: any
+  url_launcher: any
+  http_parser: any
 dev_dependencies:
   flutter_test:
     sdk: flutter

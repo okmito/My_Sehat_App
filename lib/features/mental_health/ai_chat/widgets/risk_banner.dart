@@ -43,9 +43,9 @@ class RiskBanner extends StatelessWidget {
             style: GoogleFonts.outfit(color: Colors.red.shade800),
           ),
           const SizedBox(height: 12),
-          _HelplineRow(name: "Emergency", number: "112"),
-          _HelplineRow(name: "AASRA", number: "9152987821"),
-          _HelplineRow(name: "Kiran (Govt)", number: "1800-599-0019"),
+          const _HelplineRow(name: "Emergency", number: "112"),
+          const _HelplineRow(name: "AASRA", number: "9152987821"),
+          const _HelplineRow(name: "Kiran (Govt)", number: "1800-599-0019"),
         ],
       ),
     );

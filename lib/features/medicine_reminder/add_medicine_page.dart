@@ -195,7 +195,7 @@ class _AddMedicinePageState extends ConsumerState<AddMedicinePage> {
             const SizedBox(height: 20),
             _buildLabel("Form"),
             DropdownButtonFormField<String>(
-              value: _selectedForm,
+              initialValue: _selectedForm,
               hint: const Text("Select Form"),
               items: _forms.map((String form) {
                 return DropdownMenuItem<String>(
@@ -212,7 +212,7 @@ class _AddMedicinePageState extends ConsumerState<AddMedicinePage> {
             const SizedBox(height: 20),
             _buildLabel("Schedule Type"),
             DropdownButtonFormField<String>(
-              value: _selectedSchedule,
+              initialValue: _selectedSchedule,
               hint: const Text("Select Schedule"),
               items: _schedules.map((String schedule) {
                 return DropdownMenuItem<String>(
