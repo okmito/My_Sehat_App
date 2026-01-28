@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:uuid/uuid.dart';
 import 'core/theme/app_theme.dart';
 import 'core/router/app_router.dart';
 import 'core/services/local_storage_service.dart';
@@ -11,6 +13,13 @@ void main() async {
 
   final localStorage = LocalStorageService();
   await localStorage.init();
+
+  // Initialize Persistent User ID
+  final prefs = await SharedPreferences.getInstance();
+  if (!prefs.containsKey('mysehat_user_id')) {
+    var uuid = const Uuid();
+    await prefs.setString('mysehat_user_id', uuid.v4());
+  }
 
   runApp(
     ProviderScope(

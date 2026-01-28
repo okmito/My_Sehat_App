@@ -6,7 +6,10 @@ import '../../../features/auth/presentation/pages/profile_screen.dart';
 import '../../../features/home/presentation/pages/home_screen.dart';
 import '../../../features/emergency/presentation/pages/sos_screen.dart';
 import '../../../features/emergency/presentation/pages/emergency_contacts_screen.dart';
-import '../../../features/symptom_check/presentation/pages/symptom_checker_screen.dart';
+
+import '../../../features/symptom_check/presentation/pages/diagnostics_entry_screen.dart';
+import '../../../features/symptom_check/presentation/pages/diagnostics_chat_screen.dart';
+import '../../../features/symptom_check/presentation/pages/diagnostics_result_screen.dart';
 import '../../../features/mental_health/presentation/pages/mental_health_screen.dart';
 import '../../../features/appointment/presentation/pages/appointment_screen.dart';
 import '../../../features/intro/presentation/pages/splash_screen.dart';
@@ -22,6 +25,7 @@ import '../../../features/history/presentation/pages/history_screen.dart';
 import '../../../features/daily_journal/journal_list_page.dart';
 import '../../../features/stress_games/stress_games_page.dart';
 import '../../../features/medicine_reminder/medicine_reminder_page.dart';
+import '../../../features/mental_health/ai_chat/ai_triage_chat_screen.dart';
 
 final goRouterProvider = Provider<GoRouter>((ref) {
   return GoRouter(
@@ -118,7 +122,15 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/symptom',
-        builder: (context, state) => const SymptomCheckerScreen(),
+        builder: (context, state) => const DiagnosticsEntryScreen(),
+      ),
+      GoRoute(
+        path: '/diagnostics/chat',
+        builder: (context, state) => const DiagnosticsChatScreen(),
+      ),
+      GoRoute(
+        path: '/diagnostics/result',
+        builder: (context, state) => const DiagnosticsResultScreen(),
       ),
       GoRoute(
         path: '/mental_health',
@@ -147,6 +159,10 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/medicine_reminder',
         builder: (context, state) => const MedicineReminderPage(),
+      ),
+      GoRoute(
+        path: '/ai_chat',
+        builder: (context, state) => const AiTriageChatScreen(),
       ),
     ],
   );

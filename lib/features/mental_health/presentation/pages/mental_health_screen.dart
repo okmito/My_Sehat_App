@@ -100,7 +100,9 @@ class MentalHealthScreen extends ConsumerWidget {
                 title: "Chat with AI Companion (Anonymous)",
                 icon: Icons.chat_bubble,
                 color: Colors.teal,
-                onTap: () {},
+                onTap: () {
+                  context.push('/ai_chat');
+                },
                 isWide: true),
 
             const SizedBox(height: 24),
