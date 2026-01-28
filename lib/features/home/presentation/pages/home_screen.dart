@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
+import '../widgets/daily_medication_widget.dart';
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
@@ -21,8 +22,11 @@ class HomeScreen extends ConsumerWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _HomeHeader(userName: userName),
+              const SizedBox(height: 16),
+              const DailyMedicationWidget(),
               const SizedBox(height: 24),
               const _HeroSection(),
+
               const SizedBox(height: 24),
               const _SectionTitle(title: "Diagnostics Flow"),
               const SizedBox(height: 16),
@@ -400,7 +404,11 @@ class _QuickActionChip extends StatelessWidget {
       color: color.withValues(alpha: 0.8),
       borderRadius: BorderRadius.circular(20),
       child: InkWell(
-        onTap: () {}, // Placeholder for action
+        onTap: () {
+          if (label == "Medicine Reminder") {
+            context.push('/medicine_reminder');
+          }
+        }, // Placeholder for action
         borderRadius: BorderRadius.circular(20),
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),

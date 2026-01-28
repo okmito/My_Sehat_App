@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 // Simple entity
@@ -84,14 +85,14 @@ class MentalHealthScreen extends ConsumerWidget {
                         title: "Daily\nJournal",
                         icon: Icons.book,
                         color: Colors.orange,
-                        onTap: () {})),
+                        onTap: () => context.push('/daily_journal'))),
                 const SizedBox(width: 16),
                 Expanded(
                     child: _FeatureCard(
                         title: "Stress Relief\nGames",
                         icon: Icons.videogame_asset,
                         color: Colors.purple,
-                        onTap: () {})),
+                        onTap: () => context.push('/stress_games'))),
               ],
             ),
             const SizedBox(height: 16),

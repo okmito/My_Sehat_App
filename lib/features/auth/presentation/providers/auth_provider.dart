@@ -7,9 +7,6 @@ import '../../domain/entities/user_entity.dart';
 import '../../../../core/usecases/usecase.dart';
 
 // Service Providers
-final localStorageServiceProvider = Provider<LocalStorageService>((ref) {
-  throw UnimplementedError("Initialize this in main");
-});
 
 final authLocalDataSourceProvider = Provider<AuthLocalDataSource>((ref) {
   return AuthLocalDataSourceImpl(ref.watch(localStorageServiceProvider));

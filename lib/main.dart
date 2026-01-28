@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'core/theme/app_theme.dart';
 import 'core/router/app_router.dart';
 import 'core/services/local_storage_service.dart';
-import 'features/auth/presentation/providers/auth_provider.dart';
 import 'features/emergency/presentation/providers/emergency_contacts_provider.dart';
 import 'core/providers/language_provider.dart';
 

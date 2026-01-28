@@ -45,6 +45,11 @@ dependencies:
   google_fonts: ^6.2.1
   dartz: ^0.10.1
 
+  image_picker: any
+  signature: any
+  flame: any
+  shared_preferences: any
+  audioplayers: any
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -56,3 +61,8 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  assets:
+    - assets/sounds/
+    - assets/images/
+    - assets/stickers/cats/
+    - assets/stickers/dogs/

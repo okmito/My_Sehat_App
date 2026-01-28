@@ -19,6 +19,9 @@ import 'main_wrapper_screen.dart';
 import '../../../features/search/presentation/pages/search_screen.dart';
 import '../../../features/notifications/presentation/pages/notifications_screen.dart';
 import '../../../features/history/presentation/pages/history_screen.dart';
+import '../../../features/daily_journal/journal_list_page.dart';
+import '../../../features/stress_games/stress_games_page.dart';
+import '../../../features/medicine_reminder/medicine_reminder_page.dart';
 
 final goRouterProvider = Provider<GoRouter>((ref) {
   return GoRouter(
@@ -132,6 +135,18 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/settings',
         builder: (context, state) => const SettingsScreen(),
+      ),
+      GoRoute(
+        path: '/daily_journal',
+        builder: (context, state) => const JournalListPage(),
+      ),
+      GoRoute(
+        path: '/stress_games',
+        builder: (context, state) => const StressGamesPage(),
+      ),
+      GoRoute(
+        path: '/medicine_reminder',
+        builder: (context, state) => const MedicineReminderPage(),
       ),
     ],
   );
