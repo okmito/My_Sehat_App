@@ -2,12 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
-import 'package:uuid/uuid.dart';
-import 'models/medicine_model.dart';
+import 'models/medication.dart';
 import 'providers/medicine_provider.dart';
 
 class AddMedicinePage extends ConsumerStatefulWidget {
-  final MedicineModel? medicine;
+  final Medication? medicine;
   const AddMedicinePage({super.key, this.medicine});
 
   @override
@@ -37,18 +36,31 @@ class _AddMedicinePageState extends ConsumerState<AddMedicinePage> {
     if (widget.medicine != null) {
       final med = widget.medicine!;
       _nameController.text = med.name;
-      _strengthController.text = med.strength;
+      _strengthController.text = med.strength ?? '';
       _selectedForm = med.form;
-      _selectedSchedule = med.scheduleType;
-      _endDate = med.endDate;
-
-      for (var timeStr in med.times) {
-        final format = DateFormat("hh:mm a");
-        try {
-          final dt = format.parse(timeStr);
-          _selectedTimes.add(TimeOfDay(hour: dt.hour, minute: dt.minute));
-        } catch (e) {
-          // Handle parse error if needed
+      // Pre-fill schedule info if available
+      if (med.schedule != null) {
+        _selectedSchedule = med.schedule!.scheduleType;
+        if (med.schedule!.endDate != null) {
+          _endDate = DateTime.parse(med.schedule!.endDate!);
+        }
+        for (var timeStr in med.schedule!.times) {
+          // Expecting HH:mm format from backend
+          try {
+            // If format is HH:mm:
+            final parts = timeStr.split(':');
+            if (parts.length >= 2) {
+              _selectedTimes.add(TimeOfDay(
+                  hour: int.parse(parts[0]), minute: int.parse(parts[1])));
+            } else {
+              // Fallback attempt with date format
+              final format = DateFormat("HH:mm");
+              final dt = format.parse(timeStr);
+              _selectedTimes.add(TimeOfDay(hour: dt.hour, minute: dt.minute));
+            }
+          } catch (e) {
+            print("Error parsing time: $timeStr");
+          }
         }
       }
     }
@@ -113,7 +125,6 @@ class _AddMedicinePageState extends ConsumerState<AddMedicinePage> {
 
     // Strength validation
     if (_strengthController.text.isNotEmpty) {
-      // Regex to allow only numbers (and maybe a decimal)
       if (!RegExp(r'^\d*\.?\d*$').hasMatch(_strengthController.text)) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Strength must be a number')),
@@ -122,41 +133,63 @@ class _AddMedicinePageState extends ConsumerState<AddMedicinePage> {
       }
     }
 
-    // Use existing ID if editing, otherwise generate new one
-    final id = widget.medicine?.id ?? const Uuid().v4();
-    final createdDate = widget.medicine?.createdDate ?? DateTime.now();
-    final history = widget.medicine?.history ?? {};
-
-    final newMedicine = MedicineModel(
-      id: id,
-      name: _nameController.text,
-      strength: _strengthController.text,
-      form: _selectedForm!,
-      scheduleType: _selectedSchedule!,
-      times: _selectedTimes.map((t) {
-        final now = DateTime.now();
-        final dt = DateTime(now.year, now.month, now.day, t.hour, t.minute);
-        return DateFormat("hh:mm a").format(dt);
-      }).toList(),
-      history: history,
-      createdDate: createdDate,
-      endDate: _endDate,
-    );
-
-    if (widget.medicine != null) {
-      await ref.read(medicineProvider.notifier).updateMedicine(newMedicine);
-    } else {
-      await ref.read(medicineProvider.notifier).addMedicine(newMedicine);
-    }
-
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-            content: Text(widget.medicine != null
-                ? 'Medicine updated successfully!'
-                : 'Medicine saved successfully!')),
+    try {
+      // 1. Prepare Medication object
+      final newMedicine = Medication(
+        id: widget.medicine?.id, // null for new
+        name: _nameController.text,
+        strength: _strengthController.text.isNotEmpty
+            ? _strengthController.text
+            : null,
+        form: _selectedForm!,
+        instructions: null,
       );
-      Navigator.pop(context);
+
+      // 2. Prepare Schedule Data
+      // Times should be HH:mm for backend
+      final timesList = _selectedTimes.map((t) {
+        final h = t.hour.toString().padLeft(2, '0');
+        final m = t.minute.toString().padLeft(2, '0');
+        return "$h:$m";
+      }).toList();
+
+      final scheduleData = {
+        "schedule_type": _selectedSchedule!
+            .toUpperCase(), // Backend likely expects UPPERCASE (DAILY, WEEKLY)
+        "times": timesList,
+        "end_date": _endDate != null
+            ? DateFormat('yyyy-MM-dd').format(_endDate!)
+            : null,
+      };
+
+      if (widget.medicine != null) {
+        await ref.read(medicineProvider.notifier).updateMedicine(
+            id: widget.medicine!.id!,
+            medication: newMedicine,
+            scheduleData: scheduleData);
+      } else {
+        await ref
+            .read(medicineProvider.notifier)
+            .addMedicine(medication: newMedicine, scheduleData: scheduleData);
+      }
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+              content: Text(widget.medicine != null
+                  ? 'Medicine updated successfully!'
+                  : 'Medicine saved successfully!')),
+        );
+        Navigator.pop(context);
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+              content: Text('Error saving medicine: $e'),
+              backgroundColor: Colors.red),
+        );
+      }
     }
   }
 
@@ -183,11 +216,11 @@ class _AddMedicinePageState extends ConsumerState<AddMedicinePage> {
               ),
             ),
             const SizedBox(height: 20),
-            _buildLabel("Strength (Optional)"), // Updated label
+            _buildLabel("Strength (Optional)"),
             TextField(
               controller: _strengthController,
-              keyboardType: const TextInputType.numberWithOptions(
-                  decimal: true), // Numeric keyboard
+              keyboardType:
+                  const TextInputType.numberWithOptions(decimal: true),
               decoration: const InputDecoration(
                 hintText: "e.g., 500 (only numbers)",
               ),
