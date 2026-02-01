@@ -79,6 +79,7 @@ build_log.txt
 # Analysis and logs
 analysis*.json
 analysis*.txt
+*analysis*.txt
 cleanup_report.txt
 analysis_results.txt
 analysis_report.txt

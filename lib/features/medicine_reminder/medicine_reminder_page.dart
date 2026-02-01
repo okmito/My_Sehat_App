@@ -84,14 +84,18 @@ class _MedicineReminderPageState extends ConsumerState<MedicineReminderPage>
             onPressed: () => Navigator.pop(ctx),
             child: const Text("Cancel"),
           ),
-          TextButton(
+          ElevatedButton(
             onPressed: () {
               ref.read(medicineProvider.notifier).deleteMedicine(id);
               Navigator.pop(ctx);
               ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(content: Text("Medicine deleted.")));
             },
-            child: const Text("Delete", style: TextStyle(color: Colors.red)),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text("Delete"),
           ),
         ],
       ),

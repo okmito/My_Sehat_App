@@ -72,10 +72,18 @@ class JournalSticker {
   @HiveField(2)
   final double dy;
 
+  @HiveField(3)
+  final double scale;
+
+  @HiveField(4)
+  final double rotation;
+
   JournalSticker({
     required this.assetPath,
     required this.dx,
     required this.dy,
+    this.scale = 1.0,
+    this.rotation = 0.0,
   });
 }
 

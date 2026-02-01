@@ -65,7 +65,9 @@ class _HistoryScreenState extends State<HistoryScreen> {
               backgroundColor: Colors.red,
               foregroundColor: Colors.white,
             ),
-            child: Text("Delete", style: GoogleFonts.outfit()),
+            child: Text("Delete",
+                style: GoogleFonts.outfit(
+                    color: Colors.red, fontWeight: FontWeight.bold)),
           ),
         ],
       ),

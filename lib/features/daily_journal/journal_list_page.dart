@@ -57,11 +57,14 @@ class _JournalListPageState extends ConsumerState<JournalListPage> {
             child:
                 Text("Cancel", style: GoogleFonts.outfit(color: Colors.grey)),
           ),
-          TextButton(
+          ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+            ),
             child: Text("Delete",
-                style: GoogleFonts.outfit(
-                    color: Colors.red, fontWeight: FontWeight.bold)),
+                style: GoogleFonts.outfit(fontWeight: FontWeight.bold)),
           ),
         ],
       ),

@@ -65,9 +65,12 @@ class _DiagnosticsChatScreenState extends ConsumerState<DiagnosticsChatScreen> {
             onPressed: () => context.pop(false),
             child: const Text("Cancel"),
           ),
-          TextButton(
+          ElevatedButton(
             onPressed: () => context.pop(true),
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+            ),
             child: const Text("Leave"),
           ),
         ],

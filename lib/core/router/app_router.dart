@@ -11,7 +11,7 @@ import '../../../features/symptom_check/presentation/pages/diagnostics_entry_scr
 import '../../../features/symptom_check/presentation/pages/diagnostics_chat_screen.dart';
 import '../../../features/symptom_check/presentation/pages/diagnostics_result_screen.dart';
 import '../../../features/mental_health/presentation/pages/mental_health_screen.dart';
-import '../../../features/appointment/presentation/pages/appointment_screen.dart';
+import '../../../features/doctor_appointment/presentation/pages/doctor_appointment_screen.dart';
 import '../../../features/intro/presentation/pages/splash_screen.dart';
 import '../../../features/settings/presentation/pages/language_selection_screen.dart';
 import '../../../features/settings/presentation/pages/app_info_screen.dart';
@@ -113,7 +113,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/appointment',
-        builder: (context, state) => const AppointmentScreen(),
+        builder: (context, state) => const DoctorAppointmentScreen(),
       ),
       GoRoute(
         path: '/sos',

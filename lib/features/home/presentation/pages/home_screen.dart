@@ -488,6 +488,8 @@ class _QuickActionChip extends StatelessWidget {
         onTap: () {
           if (label == "Medicine Reminder") {
             context.push('/medicine_reminder');
+          } else if (label == "Journaling") {
+            context.push('/daily_journal');
           }
         }, // Placeholder for action
         borderRadius: BorderRadius.circular(20),

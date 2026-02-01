@@ -1,4 +1,7 @@
 import 'dart:async';
+import 'dart:ui' as ui;
+
+import 'package:flutter/services.dart' show rootBundle, AssetManifest;
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -38,6 +41,15 @@ class _JournalEntryPageState extends ConsumerState<JournalEntryPage> {
   Timer? _autoSaveTimer;
   Color _penColor = Colors.black;
   double _penWidth = 3.0;
+  String _brushType = "Pen";
+  List<JournalDrawing> _completedStrokes = [];
+  List<JournalSticker> _stickers = []; // Local mutable state for stickers
+  Map<String, List<String>> _stickerCategories = {};
+  bool _isLoadingStickers = false;
+
+  // Gesture state
+  double _initialScale = 1.0;
+  double _initialRotation = 0.0;
 
   @override
   void initState() {
@@ -46,6 +58,7 @@ class _JournalEntryPageState extends ConsumerState<JournalEntryPage> {
     _controller.addListener(_onTextChanged);
     _updateSignatureController(); // Initialize and add listener
     _loadEntry();
+    _indexStickers();
   }
 
   void _loadEntry() {
@@ -58,18 +71,20 @@ class _JournalEntryPageState extends ConsumerState<JournalEntryPage> {
       if (_entry!.segments.isNotEmpty) {
         _currentFont = _entry!.segments.last.fontFamily;
       }
+      if (_entry!.stickers.isNotEmpty) {
+        _stickers = List.from(_entry!.stickers);
+      }
       if (_entry!.drawings.isNotEmpty) {
-        final existingPoints = _entry!.drawings.first.points
-            .map((d) => Point(Offset(d.dx, d.dy), PointType.tap, 1.0))
-            .toList();
-        _signatureController = SignatureController(
-          points: existingPoints,
-          penStrokeWidth: _entry!.drawings.first.strokeWidth,
-          penColor: Color(_entry!.drawings.first.color),
-          exportBackgroundColor: Colors.transparent,
-        );
-        _penWidth = _entry!.drawings.first.strokeWidth;
-        _penColor = Color(_entry!.drawings.first.color);
+        _completedStrokes = List.from(_entry!.drawings);
+        // We don't load into signature controller anymore, they are rendered by StrokesPainter
+        // Just set the current pen properties from the last stroke if available (optional)
+        if (_completedStrokes.isNotEmpty) {
+          final last = _completedStrokes.last;
+          _penColor = Color(last.color);
+          _penWidth = last.strokeWidth;
+          _brushType = last.brushType;
+        }
+        _updateSignatureController();
       }
     }
   }
@@ -90,16 +105,20 @@ class _JournalEntryPageState extends ConsumerState<JournalEntryPage> {
       segments: updatedSegments,
       isPrivate: _entry!.isPrivate,
       pin: _entry!.pin,
-      stickers: _entry!.stickers,
+      stickers: _stickers,
       drawings: [
-        JournalDrawing(
-          points: _signatureController.points
-              .map((p) => OffsetData(p.offset.dx, p.offset.dy))
-              .toList(),
-          color: _penColor.toARGB32(),
-          strokeWidth: _penWidth,
-          brushType: "Pen",
-        )
+        ..._completedStrokes,
+        if (_signatureController.isNotEmpty)
+          JournalDrawing(
+            points: _signatureController.points
+                .map((p) => OffsetData(p.offset.dx, p.offset.dy))
+                .toList(),
+            color: _brushType == "Eraser"
+                ? Colors.transparent.toARGB32()
+                : _penColor.toARGB32(),
+            strokeWidth: _penWidth,
+            brushType: _brushType,
+          )
       ],
     );
 
@@ -136,69 +155,190 @@ class _JournalEntryPageState extends ConsumerState<JournalEntryPage> {
     return "$day$suffix ${DateFormat('MMMM yyyy, hh:mm a').format(date)}";
   }
 
-  void _showStickerPanel() {
-    final stickerAssets = [
-      'assets/stickers/cats/neko.png',
-      'assets/stickers/dogs/pug.png',
-      'assets/stickers/cats/love.png',
-      'assets/stickers/dogs/sit.png',
-    ];
+  Future<void> _indexStickers() async {
+    setState(() => _isLoadingStickers = true);
+    try {
+      // Use the modern AssetManifest API which handles web/mobile differences better
+      final AssetManifest assetManifest =
+          await AssetManifest.loadFromAssetBundle(rootBundle);
+      final List<String> assets = assetManifest.listAssets();
 
+      final stickerPaths = assets
+          .where((String key) =>
+              key.contains('stickers/') && key.toLowerCase().endsWith('.png'))
+          .toList();
+
+      final Map<String, List<String>> categories = {};
+
+      if (stickerPaths.isEmpty) {
+        // Fallback for debugging if assets aren't found (e.g. during dev with issues)
+        debugPrint("No stickers found via manifest. Using fallback list.");
+        categories['Cats'] = [
+          'assets/stickers/cats/aerobic.png',
+          'assets/stickers/cats/angry.png',
+          'assets/stickers/cats/arrogant.png',
+          'assets/stickers/cats/checklist.png',
+          'assets/stickers/cats/hamburger.png',
+          'assets/stickers/cats/headphones.png',
+          'assets/stickers/cats/love.png',
+          'assets/stickers/cats/neko.png',
+          'assets/stickers/cats/scratch.png',
+          'assets/stickers/cats/sick.png',
+          'assets/stickers/cats/smile.png',
+          'assets/stickers/cats/yawn.png',
+        ];
+        categories['Dogs'] = [
+          // Add dog stickers if available in directory, otherwise leave empty or add placeholders
+        ];
+        // Note: These fallback paths must actually exist to render.
+        // If manifest returns empty, likely the assets aren't included in build or path is wrong.
+      } else {
+        for (final path in stickerPaths) {
+          final parts = path.split('/');
+          if (parts.length >= 3) {
+            // Expecting: assets/stickers/Category/filename.png
+            // parts: [assets, stickers, Category, filename.png]
+            final category = parts[parts.length - 2];
+
+            // Clean up category name
+            String categoryKey = category;
+            if (categoryKey.toLowerCase() == 'stickers') {
+              categoryKey = "Misc";
+            } else {
+              categoryKey =
+                  categoryKey[0].toUpperCase() + categoryKey.substring(1);
+            }
+
+            categories.putIfAbsent(categoryKey, () => []).add(path);
+          } else {
+            categories.putIfAbsent("Misc", () => []).add(path);
+          }
+        }
+      }
+
+      setState(() {
+        _stickerCategories = categories;
+        _isLoadingStickers = false;
+      });
+    } catch (e) {
+      debugPrint("Error loading stickers: $e");
+      // Don't leave it loading forever
+      setState(() {
+        _isLoadingStickers = false;
+        // Fallback empty state handled by UI
+      });
+    }
+  }
+
+  void _showStickerPanel() {
     showModalBottomSheet(
       context: context,
-      builder: (context) => Container(
-        padding: const EdgeInsets.all(16),
-        height: 300,
-        child: Column(
-          children: [
-            Text("Stickers",
-                style: GoogleFonts.outfit(
-                    fontWeight: FontWeight.bold, fontSize: 18)),
-            const SizedBox(height: 10),
-            Expanded(
-              child: GridView.builder(
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 4,
-                  mainAxisSpacing: 10,
-                  crossAxisSpacing: 10,
+      isScrollControlled: true,
+      builder: (context) => DraggableScrollableSheet(
+        initialChildSize: 0.5,
+        minChildSize: 0.5,
+        maxChildSize: 0.8,
+        expand: false,
+        builder: (context, scrollController) => Container(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            children: [
+              Text("Stickers",
+                  style: GoogleFonts.outfit(
+                      fontWeight: FontWeight.bold, fontSize: 18)),
+              const SizedBox(height: 10),
+              if (_isLoadingStickers)
+                const CircularProgressIndicator()
+              else
+                Expanded(
+                  child: ListView(
+                    controller: scrollController,
+                    children: _stickerCategories.entries.map((entry) {
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 8.0),
+                            child: Text(entry.key,
+                                style: const TextStyle(
+                                    fontWeight: FontWeight.bold)),
+                          ),
+                          GridView.builder(
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(),
+                            gridDelegate:
+                                const SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount: 4,
+                              mainAxisSpacing: 10,
+                              crossAxisSpacing: 10,
+                            ),
+                            itemCount: entry.value.length,
+                            itemBuilder: (context, index) => InkWell(
+                              onTap: () {
+                                _addSticker(
+                                    entry.value[index],
+                                    MediaQuery.of(context).size.width / 2 - 50,
+                                    MediaQuery.of(context).size.height / 2 -
+                                        50);
+                                Navigator.pop(context);
+                              },
+                              child: Image.asset(entry.value[index],
+                                  fit: BoxFit.contain),
+                            ),
+                          ),
+                        ],
+                      );
+                    }).toList(),
+                  ),
                 ),
-                itemCount: stickerAssets.length,
-                itemBuilder: (context, index) => InkWell(
-                  onTap: () {
-                    _addSticker(stickerAssets[index], 100, 200);
-                    Navigator.pop(context);
-                  },
-                  child: Image.asset(stickerAssets[index], fit: BoxFit.contain),
-                ),
-              ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
   }
 
   void _addSticker(String path, double dx, double dy) {
+    // We don't need _entry to be non-null to add to local list, but we need it for saving contextual data
     if (_entry == null) return;
-    final newSticker = JournalSticker(assetPath: path, dx: dx, dy: dy);
+
+    final newSticker = JournalSticker(
+        assetPath: path, dx: dx, dy: dy, scale: 1.0, rotation: 0.0);
     setState(() {
-      _entry!.stickers.add(newSticker);
+      _stickers.add(newSticker);
     });
     _saveEntry();
   }
 
-  void _moveSticker(JournalSticker sticker, Offset delta) {
-    setState(() {
-      final index = _entry!.stickers.indexOf(sticker);
-      if (index != -1) {
-        _entry!.stickers[index] = JournalSticker(
-          assetPath: sticker.assetPath,
-          dx: sticker.dx + delta.dx,
-          dy: sticker.dy + delta.dy,
+  void _updateSticker(JournalSticker oldSticker, JournalSticker newSticker) {
+    final index = _stickers.indexOf(oldSticker);
+    if (index != -1) {
+      setState(() {
+        _stickers[index] = newSticker;
+      });
+      _saveEntry(); // Debounce this if performance issues arise
+    }
+  }
+
+  void _finishCurrentStroke() {
+    if (_signatureController.isNotEmpty) {
+      final points = _signatureController.points
+          .map((p) => OffsetData(p.offset.dx, p.offset.dy))
+          .toList();
+      if (points.isNotEmpty) {
+        final drawing = JournalDrawing(
+          points: points,
+          color: _penColor.toARGB32(),
+          strokeWidth: _penWidth,
+          brushType: _brushType,
         );
+        setState(() {
+          _completedStrokes.add(drawing);
+          _signatureController.clear();
+        });
+        _saveEntry();
       }
-    });
-    _saveEntry();
+    }
   }
 
   Future<void> _pickImage() async {
@@ -211,136 +351,138 @@ class _JournalEntryPageState extends ConsumerState<JournalEntryPage> {
     }
   }
 
-  void _showSketchTools() {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setModalState) => Container(
-          margin: const EdgeInsets.all(16),
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(25),
-            boxShadow: [
-              BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.1), blurRadius: 10)
+  Widget _buildBrushSelector() {
+    return Container(
+      width: 300,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 10)
+        ],
+        border: Border.all(color: Colors.grey.shade200),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text("Brush Tool 🖌️",
+                  style: GoogleFonts.outfit(fontWeight: FontWeight.bold)),
+              IconButton(
+                  icon: const Icon(Icons.close),
+                  onPressed: () => setState(() => _isSketchMode = false)),
             ],
           ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
+          const SizedBox(height: 10),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text("Brush Tool 🖌️",
-                      style: GoogleFonts.outfit(fontWeight: FontWeight.bold)),
-                  IconButton(
-                      icon: const Icon(Icons.close),
-                      onPressed: () => Navigator.pop(context)),
-                ],
-              ),
-              const SizedBox(height: 10),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: [
-                  _brushTypeIcon(Icons.edit, 3.0, "Pen", setModalState),
-                  _brushTypeIcon(Icons.brush, 8.0, "Water", setModalState),
-                  _brushTypeIcon(
-                      Icons.more_horiz, 2.0, "Dotted", setModalState),
-                ],
-              ),
-              const SizedBox(height: 20),
-              Row(
-                children: [
-                  const Icon(Icons.line_weight),
-                  Expanded(
-                    child: Slider(
-                      value: _penWidth,
-                      min: 1,
-                      max: 30,
-                      onChanged: (val) {
-                        setState(() {
-                          _penWidth = val;
-                        });
-                        setModalState(() {});
-                        _updateSignatureController();
-                      },
-                    ),
-                  ),
-                ],
-              ),
-              SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: Row(
-                  children: [
-                    _colorOption(Colors.black, setModalState),
-                    _colorOption(Colors.red, setModalState),
-                    _colorOption(Colors.blue, setModalState),
-                    _colorOption(Colors.green, setModalState),
-                    _colorOption(Colors.orange, setModalState),
-                    _colorOption(Colors.purple, setModalState),
-                  ],
+              _brushTypeIcon(Icons.edit, "Pen"),
+              _brushTypeIcon(Icons.brush, "Water"),
+              _brushTypeIcon(Icons.more_horiz, "Dotted"),
+              _brushTypeIcon(Icons.auto_fix_normal, "Eraser"), // Eraser Tool
+            ],
+          ),
+          const SizedBox(height: 15),
+          Row(
+            children: [
+              const Icon(Icons.line_weight, size: 20),
+              Expanded(
+                child: Slider(
+                  value: _penWidth,
+                  min: 1,
+                  max: 20,
+                  onChanged: (val) {
+                    setState(() {
+                      _penWidth = val;
+                      // Update brush type defaults if needed, but keeping simple for now
+                    });
+                    _updateSignatureController();
+                  },
                 ),
               ),
-              const SizedBox(height: 10),
-              TextButton.icon(
-                icon: const Icon(Icons.clear),
-                label: const Text("Clear Canvas"),
-                onPressed: () => setState(() => _signatureController.clear()),
-              ),
             ],
           ),
-        ),
-      ),
-    );
-  }
-
-  Widget _brushTypeIcon(
-      IconData icon, double width, String label, StateSetter setModalState) {
-    final isSelected = _penWidth == width;
-    return InkWell(
-      onTap: () {
-        setState(() {
-          _penWidth = width;
-          _isSketchMode = true;
-        });
-        setModalState(() {});
-        _updateSignatureController();
-      },
-      child: Column(
-        children: [
-          CircleAvatar(
-            backgroundColor: isSelected ? Colors.orange : Colors.grey[200],
-            child: Icon(icon, color: isSelected ? Colors.white : Colors.black),
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: [
+                _colorOption(Colors.black),
+                _colorOption(Colors.red),
+                _colorOption(Colors.blue),
+                _colorOption(Colors.green),
+                _colorOption(Colors.orange),
+                _colorOption(Colors.purple),
+              ],
+            ),
           ),
-          const SizedBox(height: 5),
-          Text(label, style: const TextStyle(fontSize: 12)),
         ],
       ),
     );
   }
 
-  Widget _colorOption(Color color, StateSetter setModalState) {
+  Widget _brushTypeIcon(IconData icon, String type) {
+    final isSelected = _brushType == type;
+    return InkWell(
+      onTap: () {
+        setState(() {
+          _brushType = type;
+          // Set default widths for different brushes if desired
+          if (type == "Water" && _penWidth < 5) _penWidth = 8.0;
+          if (type == "Dotted" && _penWidth > 5) _penWidth = 2.0;
+          if (type == "Eraser") {
+            // Visual feedback for eraser mode (cursor/color) - managed by painter
+            // We might want a default larger width for eraser
+            if (_penWidth < 10) _penWidth = 15.0;
+          }
+        });
+        _updateSignatureController();
+      },
+      child: Column(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: isSelected
+                  ? Colors.orange.withValues(alpha: 0.2)
+                  : Colors.transparent,
+              borderRadius: BorderRadius.circular(10),
+              border: isSelected ? Border.all(color: Colors.orange) : null,
+            ),
+            child: Icon(icon, color: isSelected ? Colors.orange : Colors.grey),
+          ),
+          Text(type,
+              style: TextStyle(
+                  fontSize: 12,
+                  fontWeight:
+                      isSelected ? FontWeight.bold : FontWeight.normal)),
+        ],
+      ),
+    );
+  }
+
+  Widget _colorOption(Color color) {
     return Padding(
-      padding: const EdgeInsets.only(right: 10),
+      padding: const EdgeInsets.only(right: 8),
       child: InkWell(
         onTap: () {
           setState(() {
             _penColor = color;
           });
-          setModalState(() {});
           _updateSignatureController();
         },
         child: Container(
-          width: 30,
-          height: 30,
+          width: 24,
+          height: 24,
           decoration: BoxDecoration(
             color: color,
             shape: BoxShape.circle,
             border: _penColor == color
                 ? Border.all(color: Colors.orange, width: 2)
-                : null,
+                : Border.all(color: Colors.grey.shade300),
           ),
         ),
       ),
@@ -355,7 +497,9 @@ class _JournalEntryPageState extends ConsumerState<JournalEntryPage> {
     _signatureController = SignatureController(
       points: points,
       penStrokeWidth: _penWidth,
-      penColor: _penColor,
+      penColor: _brushType == "Eraser"
+          ? Colors.white.withValues(alpha: 0.5)
+          : _penColor, // Visual feedback for eraser
       exportBackgroundColor: Colors.transparent,
     );
     _signatureController.addListener(_onTextChanged);
@@ -415,11 +559,11 @@ class _JournalEntryPageState extends ConsumerState<JournalEntryPage> {
             onPressed: () => _showFontSelector(),
           ),
           IconButton(
-            icon: Icon(_isSketchMode ? Icons.brush : Icons.edit_note,
+            icon: Icon(Icons.brush,
                 color: _isSketchMode ? Colors.orange : Colors.black),
             onPressed: () {
               setState(() => _isSketchMode = !_isSketchMode);
-              if (_isSketchMode) _showSketchTools();
+              // Tools now show as overlay, no modal
             },
           ),
           IconButton(
@@ -469,7 +613,8 @@ class _JournalEntryPageState extends ConsumerState<JournalEntryPage> {
                         controller: _controller,
                         focusNode: _focusNode,
                         maxLines: null,
-                        enabled: !_isSketchMode, // Disable typing when drawing
+                        enabled:
+                            true, // Allow typing even when drawing (optional, but requested "overlay text")
                         decoration: const InputDecoration(
                           border: InputBorder.none,
                           isDense: true,
@@ -480,33 +625,94 @@ class _JournalEntryPageState extends ConsumerState<JournalEntryPage> {
                     const SizedBox(height: 800), // Large scroll area
                   ],
                 ),
-                // Sketch Overlay covering the whole Column
+
+                // Completed Strokes (History) - Rendered behind active stroke
+                Positioned.fill(
+                  child: IgnorePointer(
+                    child: CustomPaint(
+                      painter: StrokesPainter(_completedStrokes),
+                    ),
+                  ),
+                ),
+
+                // Active Sketch Overlay
                 Positioned.fill(
                   child: IgnorePointer(
                     ignoring: !_isSketchMode,
-                    child: Container(
-                      color: _isSketchMode ? Colors.transparent : null,
-                      child: Signature(
-                        controller: _signatureController,
-                        backgroundColor: Colors.transparent,
+                    child: Listener(
+                      onPointerUp: (_) => _finishCurrentStroke(),
+                      child: Container(
+                        // Transparent container to catch touches if needed
+                        color: Colors.transparent,
+                        child: Signature(
+                          controller: _signatureController,
+                          backgroundColor: Colors.transparent,
+                        ),
                       ),
                     ),
                   ),
                 ),
+
                 // Stickers & Images Overlay (Above drawing)
-                ..._entry!.stickers.map((sticker) => Positioned(
+                ..._stickers.map((sticker) => Positioned(
                       left: sticker.dx,
                       top: sticker.dy,
-                      child: GestureDetector(
-                        onPanUpdate: (details) =>
-                            _moveSticker(sticker, details.delta),
-                        child: _buildStickerImage(sticker),
-                      ),
+                      child: _buildDraggableSticker(sticker),
                     )),
               ],
             ),
           ),
+
+          // Floating Brush Selector Overlay
+          if (_isSketchMode)
+            Positioned(
+              top: 20,
+              right: 20,
+              child: _buildBrushSelector(),
+            ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildDraggableSticker(JournalSticker sticker) {
+    return GestureDetector(
+      onScaleStart: (details) {
+        _initialScale = sticker.scale;
+        _initialRotation = sticker.rotation;
+      },
+      onScaleUpdate: (details) {
+        if (details.pointerCount == 2) {
+          // Scale and Rotate
+          _updateSticker(
+              sticker,
+              JournalSticker(
+                assetPath: sticker.assetPath,
+                dx: sticker.dx,
+                dy: sticker.dy,
+                scale: _initialScale * details.scale,
+                rotation: _initialRotation + details.rotation,
+              ));
+        } else if (details.pointerCount == 1) {
+          // Drag (Pan)
+          // Use focalPointDelta for smoother dragging matching the finger
+          _updateSticker(
+              sticker,
+              JournalSticker(
+                assetPath: sticker.assetPath,
+                dx: sticker.dx + details.focalPointDelta.dx,
+                dy: sticker.dy + details.focalPointDelta.dy,
+                scale: sticker.scale,
+                rotation: sticker.rotation,
+              ));
+        }
+      },
+      child: Transform.rotate(
+        angle: sticker.rotation,
+        child: Transform.scale(
+          scale: sticker.scale,
+          child: _buildStickerImage(sticker),
+        ),
       ),
     );
   }
@@ -697,4 +903,71 @@ class PaperPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+class StrokesPainter extends CustomPainter {
+  final List<JournalDrawing> strokes;
+
+  StrokesPainter(this.strokes);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    // Create a transparency layer to allow eraser to work properly
+    // without clearing the background paper
+    canvas.saveLayer(Rect.fromLTWH(0, 0, size.width, size.height), Paint());
+
+    for (final stroke in strokes) {
+      final paint = Paint()
+        ..color = Color(stroke.color)
+        ..strokeWidth = stroke.strokeWidth
+        ..strokeCap = StrokeCap.round
+        ..strokeJoin = StrokeJoin.round
+        ..style = PaintingStyle.stroke;
+
+      if (stroke.brushType == "Water") {
+        paint.color = paint.color.withValues(alpha: 0.5);
+        paint.maskFilter = const MaskFilter.blur(BlurStyle.normal, 2.0);
+      } else if (stroke.brushType == "Eraser") {
+        paint.blendMode = BlendMode.clear;
+        paint.color = Colors
+            .transparent; // Color doesn't matter for clear, but good practice
+      }
+
+      final path = Path();
+      if (stroke.points.isNotEmpty) {
+        path.moveTo(stroke.points.first.dx, stroke.points.first.dy);
+        for (int i = 1; i < stroke.points.length; i++) {
+          path.lineTo(stroke.points[i].dx, stroke.points[i].dy);
+        }
+      }
+
+      if (stroke.brushType == "Dotted") {
+        _drawDashedLine(canvas, path, paint);
+      } else {
+        canvas.drawPath(path, paint);
+      }
+    }
+
+    canvas.restore(); // Merge the layer back onto the background
+  }
+
+  void _drawDashedLine(Canvas canvas, Path path, Paint paint) {
+    final ui.PathMetrics pathMetrics = path.computeMetrics();
+    for (ui.PathMetric pathMetric in pathMetrics) {
+      double distance = 0.0;
+      while (distance < pathMetric.length) {
+        final double nextDistance = distance + paint.strokeWidth; // Dot size
+        canvas.drawPath(
+          pathMetric.extractPath(distance, nextDistance),
+          paint,
+        );
+        distance = nextDistance + paint.strokeWidth * 2; // Gap size
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant StrokesPainter oldDelegate) {
+    return oldDelegate.strokes != strokes;
+  }
 }
