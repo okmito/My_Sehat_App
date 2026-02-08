@@ -37,27 +37,25 @@ try:
 except ImportError:
     DPDP_AVAILABLE = False
     print("⚠️ DPDP module not available - running without privacy compliance")
-from contextlib import asynccontextmanager
+
+# CRITICAL: Import all models at module level so they register with Base.metadata
+# This MUST happen before init_db() is called
+print("=" * 60, flush=True)
+print("MEDICINE BACKEND: Importing models at module level", flush=True)
+print("=" * 60, flush=True)
+try:
+    from medicine_backend.medicine_app.models import Medication, MedicationSchedule, Prescription, DoseEvent
+    print("✓ Models imported successfully (package style)", flush=True)
+except ImportError as e:
+    print(f"⚠️  Package import failed: {e}, trying local import...", flush=True)
+    from models import Medication, MedicationSchedule, Prescription, DoseEvent
+    print("✓ Models imported successfully (local style)", flush=True)
 
 # Database initialization function
 def init_db():
     """Initialize database tables on startup."""
     print("🔧 Initializing Medicine Backend database...", flush=True)
     
-    # Ensure all medicine models are imported and registered with `Base`
-    try:
-        from medicine_backend.medicine_app.models import Medication, MedicationSchedule, Prescription, DoseEvent  # noqa: F401
-        print("✓ Models imported successfully (package style)", flush=True)
-    except Exception as e:
-        print(f"⚠️  Package import failed: {e}, trying local import...", flush=True)
-        try:
-            # Fallback to local package import style
-            from models import Medication, MedicationSchedule, Prescription, DoseEvent  # noqa: F401
-            print("✓ Models imported successfully (local style)", flush=True)
-        except Exception as e2:
-            print(f"❌ Failed to import models: {e2}", flush=True)
-            raise
-
     # Create tables for all registered models
     try:
         Base.metadata.create_all(bind=engine)
@@ -68,6 +66,9 @@ def init_db():
         inspector = inspect(engine)
         tables = inspector.get_table_names()
         print(f"✓ Available tables: {', '.join(tables)}", flush=True)
+        
+        if not tables:
+            print("❌ WARNING: No tables were created! Models may not be registered.", flush=True)
     except Exception as e:
         print(f"❌ Failed to create database tables: {e}", flush=True)
         raise
