@@ -53,6 +53,14 @@ app = FastAPI(
 # Auto-create all tables on startup (Render-safe, no Alembic)
 @app.on_event("startup")
 def init_db():
+    # Ensure all medicine models are imported and registered with `Base`
+    try:
+        from medicine_backend.medicine_app.models import Medication, MedicationSchedule, Prescription, DoseEvent  # noqa: F401
+    except Exception:
+        # Fallback to local package import style
+        from models import Medication, MedicationSchedule, Prescription, DoseEvent  # noqa: F401
+
+    # Create tables for all registered models
     Base.metadata.create_all(bind=engine)
 
 # Add DPDP Middleware and Consent APIs
