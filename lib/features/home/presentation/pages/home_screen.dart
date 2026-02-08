@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
+import '../widgets/active_sos_banner.dart';
 import '../widgets/daily_medication_widget.dart';
 
 class HomeScreen extends ConsumerWidget {
@@ -14,178 +15,207 @@ class HomeScreen extends ConsumerWidget {
     final userName = authState.value?.name ?? "User";
 
     return Scaffold(
-      backgroundColor: Colors.grey[50],
+      backgroundColor: const Color(0xFFF8FAFB),
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _HomeHeader(userName: userName),
-              const SizedBox(height: 16),
-              const DailyMedicationWidget(),
-              const SizedBox(height: 24),
-              const _HeroSection(),
+        child: CustomScrollView(
+          slivers: [
+            // Header Section
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+                child: _HomeHeader(userName: userName),
+              ),
+            ),
 
-              const SizedBox(height: 24),
-              const _SectionTitle(title: "Diagnostics Flow"),
-              const SizedBox(height: 16),
-              const _DiagnosticsRow(),
-              const SizedBox(height: 24),
-              const _SectionTitle(title: "Health Record"),
-              const SizedBox(height: 12),
-              const _HealthRecordList(),
-              const SizedBox(height: 24),
-              const _SectionTitle(title: "Quick Actions"),
-              const SizedBox(height: 12),
-              const _QuickActionsStrip(),
-              const SizedBox(height: 20), // Bottom padding
-            ],
-          ),
+            // Active SOS Banner (shows only when SOS is active)
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+                child: const ActiveSOSBanner(),
+              ),
+            ),
+
+            // Daily Medications (moved to top)
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+                child: _SectionHeader(
+                  title: "Today's Medications",
+                  action: TextButton(
+                    onPressed: () => context.push('/medicine_reminder'),
+                    child: Text(
+                      "View All",
+                      style: GoogleFonts.outfit(
+                        color: Theme.of(context).primaryColor,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
+                child: const DailyMedicationWidget(),
+              ),
+            ),
+
+            // Main Features Grid
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(20, 24, 20, 0),
+                child: _SectionHeader(title: "Health Services"),
+              ),
+            ),
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+                child: _MainFeaturesGrid(),
+              ),
+            ),
+
+            // Health Records
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(20, 24, 20, 0),
+                child: _SectionHeader(title: "Health Records"),
+              ),
+            ),
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+                child: _HealthRecordsList(),
+              ),
+            ),
+
+            // Quick Actions
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(20, 24, 20, 0),
+                child: _SectionHeader(title: "Quick Actions"),
+              ),
+            ),
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
+                child: _QuickActionsRow(),
+              ),
+            ),
+          ],
         ),
       ),
     );
   }
 }
 
+// ============================================================================
+// HEADER
+// ============================================================================
 class _HomeHeader extends StatelessWidget {
   final String userName;
   const _HomeHeader({required this.userName});
 
+  String get _greeting {
+    final hour = DateTime.now().hour;
+    if (hour < 12) return "Good Morning";
+    if (hour < 17) return "Good Afternoon";
+    return "Good Evening";
+  }
+
   @override
   Widget build(BuildContext context) {
     return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              "Hi, $userName!",
-              style: GoogleFonts.outfit(
-                fontSize: 28,
-                fontWeight: FontWeight.bold,
-                color: Colors.black87,
-              ),
-            ),
-            Text(
-              "How are you feeling today?",
-              style: GoogleFonts.outfit(
-                fontSize: 16,
-                color: Colors.grey[600],
-              ),
-            ),
-          ],
-        ),
-        Row(
-          children: [
-            IconButton(
-              onPressed: () => context.push('/help-support'),
-              icon:
-                  const Icon(Icons.help_outline_rounded, color: Colors.black54),
-            ),
-            Material(
-              color: Colors.transparent,
-              child: InkWell(
-                borderRadius: BorderRadius.circular(24),
-                onTap: () => context.push('/profile'),
-                child: CircleAvatar(
-                  backgroundColor:
-                      Theme.of(context).primaryColor.withValues(alpha: 0.1),
-                  radius: 24,
-                  child:
-                      Icon(Icons.person, color: Theme.of(context).primaryColor),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                "$_greeting,",
+                style: GoogleFonts.outfit(
+                  fontSize: 14,
+                  color: Colors.grey[600],
+                  fontWeight: FontWeight.w500,
                 ),
               ),
-            ),
-          ],
-        )
-      ],
-    );
-  }
-}
-
-class _HeroSection extends StatelessWidget {
-  const _HeroSection();
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Expanded(
-          child: _HeroCard(
-            title: "Doctor\nAppointment",
-            icon: Icons.calendar_today_rounded,
-            color: Colors.indigo,
-            onTap: () {
-              context.push('/appointment');
-            },
+              const SizedBox(height: 2),
+              Text(
+                userName,
+                style: GoogleFonts.outfit(
+                  fontSize: 26,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black87,
+                ),
+              ),
+            ],
           ),
         ),
-        const SizedBox(width: 16),
-        Expanded(
-          child: _HeroCard(
-            title: "Mental\nHealth",
-            icon: Icons.psychology_rounded,
-            color: Colors.teal,
-            onTap: () => context.push('/mental_health'),
-          ),
+        _HeaderIconButton(
+          icon: Icons.notifications_none_rounded,
+          badgeCount: 2,
+          onTap: () => context.push('/notifications'),
+        ),
+        const SizedBox(width: 8),
+        _HeaderIconButton(
+          icon: Icons.settings_outlined,
+          onTap: () => context.push('/settings'),
         ),
       ],
     );
   }
 }
 
-class _HeroCard extends StatelessWidget {
-  final String title;
+class _HeaderIconButton extends StatelessWidget {
   final IconData icon;
-  final Color color;
+  final int? badgeCount;
   final VoidCallback onTap;
 
-  const _HeroCard({
-    required this.title,
+  const _HeaderIconButton({
     required this.icon,
-    required this.color,
+    this.badgeCount,
     required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: color.withValues(alpha: 0.1),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(24),
-        side: BorderSide(color: color.withValues(alpha: 0.2)),
-      ),
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(14),
+      elevation: 0,
       child: InkWell(
-        borderRadius: BorderRadius.circular(24),
-        splashColor: color.withValues(alpha: 0.2),
-        highlightColor: color.withValues(alpha: 0.1),
         onTap: onTap,
+        borderRadius: BorderRadius.circular(14),
         child: Container(
-          height: 160,
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: Colors.grey.shade200),
+          ),
+          child: Stack(
+            clipBehavior: Clip.none,
             children: [
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: const BoxDecoration(
-                  color: Colors.white,
-                  shape: BoxShape.circle,
+              Icon(icon, color: Colors.grey[700], size: 24),
+              if (badgeCount != null && badgeCount! > 0)
+                Positioned(
+                  right: -4,
+                  top: -4,
+                  child: Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: const BoxDecoration(
+                      color: Colors.red,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Text(
+                      badgeCount.toString(),
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
                 ),
-                child: Icon(icon, color: color, size: 28),
-              ),
-              Text(
-                title,
-                style: GoogleFonts.outfit(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.black87,
-                  height: 1.2,
-                ),
-              )
             ],
           ),
         ),
@@ -194,84 +224,172 @@ class _HeroCard extends StatelessWidget {
   }
 }
 
-class _SectionTitle extends StatelessWidget {
+// ============================================================================
+// SECTION HEADER
+// ============================================================================
+class _SectionHeader extends StatelessWidget {
   final String title;
-  const _SectionTitle({required this.title});
+  final Widget? action;
+
+  const _SectionHeader({required this.title, this.action});
 
   @override
   Widget build(BuildContext context) {
-    return Text(
-      title,
-      style: GoogleFonts.outfit(
-        fontSize: 20,
-        fontWeight: FontWeight.bold,
-        color: Colors.black87,
-      ),
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          title,
+          style: GoogleFonts.outfit(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: Colors.black87,
+          ),
+        ),
+        if (action != null) action!,
+      ],
     );
   }
 }
 
-class _DiagnosticsRow extends StatelessWidget {
-  const _DiagnosticsRow();
+// ============================================================================
+// MAIN FEATURES GRID
+// ============================================================================
+class _MainFeaturesGrid extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return GridView.count(
+      crossAxisCount: 2,
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      crossAxisSpacing: 12,
+      mainAxisSpacing: 12,
+      childAspectRatio: 1.1,
+      children: [
+        _FeatureCard(
+          title: "AI Diagnosis",
+          subtitle: "Check symptoms",
+          icon: Icons.medical_services_rounded,
+          gradient: const [Color(0xFF667EEA), Color(0xFF764BA2)],
+          onTap: () => _showDiagnosticsModal(context),
+        ),
+        _FeatureCard(
+          title: "Mental Health",
+          subtitle: "Talk to AI companion",
+          icon: Icons.psychology_rounded,
+          gradient: const [Color(0xFF11998E), Color(0xFF38EF7D)],
+          onTap: () => context.push('/mental_health'),
+        ),
+        _FeatureCard(
+          title: "Appointments",
+          subtitle: "Book & manage",
+          icon: Icons.calendar_today_rounded,
+          gradient: const [Color(0xFFEB3349), Color(0xFFF45C43)],
+          onTap: () => context.push('/appointment'),
+        ),
+        _FeatureCard(
+          title: "Health Records",
+          subtitle: "Upload & scan",
+          icon: Icons.folder_rounded,
+          gradient: const [Color(0xFF4FACFE), Color(0xFF00F2FE)],
+          onTap: () => context.push('/health-records'),
+        ),
+      ],
+    );
+  }
 
-  void _showSymptomCheckerModal(BuildContext context) {
+  void _showDiagnosticsModal(BuildContext context) {
     showModalBottomSheet(
       context: context,
-      isScrollControlled: true, // Allow it to take needed height safely
+      isScrollControlled: true,
       backgroundColor: Colors.white,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
-      builder: (modalContext) => SingleChildScrollView(
-        padding: EdgeInsets.only(
-            bottom: MediaQuery.of(modalContext).viewInsets.bottom),
-        child: Padding(
-          padding: const EdgeInsets.all(24.0),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Theme.of(context).primaryColor.withValues(alpha: 0.1),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  Icons.medical_services_outlined,
-                  size: 48,
-                  color: Theme.of(context).primaryColor,
-                ),
+      builder: (modalContext) => Padding(
+        padding: EdgeInsets.fromLTRB(
+          24,
+          24,
+          24,
+          MediaQuery.of(modalContext).viewInsets.bottom + 24,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey[300],
+                borderRadius: BorderRadius.circular(2),
               ),
-              const SizedBox(height: 16),
-              Text(
-                "AI Diagnostic Assistant",
-                textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 24),
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [Color(0xFF667EEA), Color(0xFF764BA2)],
+                ),
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFF667EEA).withOpacity(0.4),
+                    blurRadius: 20,
+                    offset: const Offset(0, 8),
+                  ),
+                ],
+              ),
+              child: const Icon(
+                Icons.medical_services_rounded,
+                size: 40,
+                color: Colors.white,
+              ),
+            ),
+            const SizedBox(height: 20),
+            Text(
+              "AI Health Assessment",
+              style: GoogleFonts.outfit(
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+                color: Colors.black87,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              "Describe your symptoms or upload an image for a preliminary assessment",
+              textAlign: TextAlign.center,
+              style: GoogleFonts.outfit(
+                fontSize: 14,
+                color: Colors.grey[600],
+                height: 1.5,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                color: Colors.amber.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
+                "⚠️ This is not a replacement for professional medical advice",
                 style: GoogleFonts.outfit(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black87,
+                  fontSize: 11,
+                  color: Colors.amber[800],
                 ),
               ),
-              const SizedBox(height: 12),
-              Text(
-                "Describe your symptoms or upload an image to get a preliminary triage assessment.\n\nNote: This is an AI tool and does not replace professional medical advice.",
-                textAlign: TextAlign.center,
-                style: GoogleFonts.outfit(
-                  fontSize: 14,
-                  color: Colors.grey[600],
-                  height: 1.5,
-                ),
-              ),
-              const SizedBox(height: 24),
-              ElevatedButton(
+            ),
+            const SizedBox(height: 24),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
                 onPressed: () {
-                  Navigator.pop(modalContext); // Close modal
-                  // Use the outer 'context' which is still valid and mounted (HomeScreen)
+                  Navigator.pop(modalContext);
                   context.push('/diagnostics/chat');
                 },
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Theme.of(context).primaryColor,
+                  backgroundColor: const Color(0xFF667EEA),
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(
@@ -287,122 +405,133 @@ class _DiagnosticsRow extends StatelessWidget {
                   ),
                 ),
               ),
-              const SizedBox(height: 12),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _FeatureCard extends StatelessWidget {
+  final String title;
+  final String subtitle;
+  final IconData icon;
+  final List<Color> gradient;
+  final VoidCallback onTap;
+
+  const _FeatureCard({
+    required this.title,
+    required this.subtitle,
+    required this.icon,
+    required this.gradient,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(20),
+      elevation: 0,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(20),
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: Colors.grey.shade100),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(colors: gradient),
+                  borderRadius: BorderRadius.circular(14),
+                  boxShadow: [
+                    BoxShadow(
+                      color: gradient[0].withOpacity(0.3),
+                      blurRadius: 8,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: Icon(icon, color: Colors.white, size: 26),
+              ),
+              const Spacer(),
+              Text(
+                title,
+                style: GoogleFonts.outfit(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black87,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                subtitle,
+                style: GoogleFonts.outfit(
+                  fontSize: 12,
+                  color: Colors.grey[500],
+                ),
+              ),
             ],
           ),
         ),
       ),
     );
   }
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceAround,
-      children: [
-        _DiagnosticsItem(
-          icon: Icons.medical_services_outlined,
-          label: "Health\nAssessment",
-          onTap: () => _showSymptomCheckerModal(context),
-        ),
-        _DiagnosticsItem(
-          icon: Icons.add_a_photo_outlined,
-          label: "Health\nRecord",
-          onTap: () {}, // TODO
-        ),
-        _DiagnosticsItem(
-          icon: Icons.health_and_safety_outlined,
-          label: "Health\nWorker",
-          onTap: () {}, // TODO
-        ),
-      ],
-    );
-  }
 }
 
-class _DiagnosticsItem extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final VoidCallback onTap;
-
-  const _DiagnosticsItem(
-      {required this.icon, required this.label, required this.onTap});
-
+// ============================================================================
+// HEALTH RECORDS LIST
+// ============================================================================
+class _HealthRecordsList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Column(
       children: [
-        Material(
-          color: Colors.white,
-          elevation: 2,
-          borderRadius: BorderRadius.circular(20),
-          shadowColor: Colors.black.withValues(alpha: 0.3),
-          child: InkWell(
-            onTap: onTap,
-            borderRadius: BorderRadius.circular(20),
-            child: Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child:
-                  Icon(icon, size: 32, color: Theme.of(context).primaryColor),
-            ),
-          ),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          label,
-          textAlign: TextAlign.center,
-          style: GoogleFonts.outfit(
-            fontSize: 14,
-            fontWeight: FontWeight.w500,
-            color: Colors.grey[700],
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _HealthRecordList extends StatelessWidget {
-  const _HealthRecordList();
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        _HealthListTile(
+        _RecordTile(
           icon: Icons.history_rounded,
+          iconColor: Colors.blue,
           title: "Past Visits",
-          subtitle: "Check your consultation history",
+          subtitle: "View consultation history",
           onTap: () {},
         ),
-        _HealthListTile(
-          icon: Icons.file_upload_rounded,
-          title: "Upload E-Reports",
-          subtitle: "Digitalize your medical records",
-          onTap: () {},
+        const SizedBox(height: 10),
+        _RecordTile(
+          icon: Icons.upload_file_rounded,
+          iconColor: Colors.purple,
+          title: "Upload Reports",
+          subtitle: "Scan & digitize medical documents",
+          onTap: () => context.push('/health-records'),
         ),
-        _HealthListTile(
+        const SizedBox(height: 10),
+        _RecordTile(
           icon: Icons.medication_rounded,
-          title: "My Medications",
-          subtitle: "Active prescriptions & reminders",
-          onTap: () {},
+          iconColor: Colors.orange,
+          title: "Prescriptions",
+          subtitle: "Active medications & dosages",
+          onTap: () => context.push('/medicine_reminder'),
         ),
       ],
     );
   }
 }
 
-class _HealthListTile extends StatelessWidget {
+class _RecordTile extends StatelessWidget {
   final IconData icon;
+  final Color iconColor;
   final String title;
   final String subtitle;
   final VoidCallback onTap;
 
-  const _HealthListTile({
+  const _RecordTile({
     required this.icon,
+    required this.iconColor,
     required this.title,
     required this.subtitle,
     required this.onTap,
@@ -410,61 +539,102 @@ class _HealthListTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      child: Material(
-        color: Colors.white,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-          side: BorderSide(color: Colors.grey.shade200),
-        ),
-        child: ListTile(
-          onTap: onTap,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          leading: Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: Colors.blue.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(icon, color: Colors.blue),
+    return Material(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(16),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(16),
+        child: Container(
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: Colors.grey.shade100),
           ),
-          title: Text(
-            title,
-            style: GoogleFonts.outfit(fontWeight: FontWeight.w600),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: iconColor.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(icon, color: iconColor, size: 22),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: GoogleFonts.outfit(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.black87,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      subtitle,
+                      style: GoogleFonts.outfit(
+                        fontSize: 12,
+                        color: Colors.grey[500],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Icon(
+                Icons.arrow_forward_ios_rounded,
+                size: 16,
+                color: Colors.grey[400],
+              ),
+            ],
           ),
-          subtitle: Text(
-            subtitle,
-            style: GoogleFonts.outfit(fontSize: 12),
-          ),
-          trailing: const Icon(Icons.arrow_forward_ios_rounded,
-              size: 16, color: Colors.grey),
         ),
       ),
     );
   }
 }
 
-class _QuickActionsStrip extends StatelessWidget {
-  const _QuickActionsStrip();
-
+// ============================================================================
+// QUICK ACTIONS
+// ============================================================================
+class _QuickActionsRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return const SingleChildScrollView(
+    return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       child: Row(
         children: [
           _QuickActionChip(
-              label: "Journaling", icon: Icons.book, color: Colors.orange),
-          SizedBox(width: 12),
+            icon: Icons.book_rounded,
+            label: "Journal",
+            color: const Color(0xFFFF6B6B),
+            onTap: () => context.push('/daily_journal'),
+          ),
+          const SizedBox(width: 10),
           _QuickActionChip(
-              label: "Medicine Reminder",
-              icon: Icons.alarm,
-              color: Colors.purple),
-          SizedBox(width: 12),
+            icon: Icons.alarm_rounded,
+            label: "Reminders",
+            color: const Color(0xFF845EC2),
+            onTap: () => context.push('/medicine_reminder'),
+          ),
+          const SizedBox(width: 10),
           _QuickActionChip(
-              label: "Steps", icon: Icons.directions_walk, color: Colors.red),
+            icon: Icons.directions_walk_rounded,
+            label: "Activity",
+            color: const Color(0xFF00C9A7),
+            onTap: () {},
+          ),
+          const SizedBox(width: 10),
+          _QuickActionChip(
+            icon: Icons.water_drop_rounded,
+            label: "Hydration",
+            color: const Color(0xFF4D8AF0),
+            onTap: () {},
+          ),
         ],
       ),
     );
@@ -472,41 +642,40 @@ class _QuickActionsStrip extends StatelessWidget {
 }
 
 class _QuickActionChip extends StatelessWidget {
-  final String label;
   final IconData icon;
+  final String label;
   final Color color;
+  final VoidCallback onTap;
 
-  const _QuickActionChip(
-      {required this.label, required this.icon, required this.color});
+  const _QuickActionChip({
+    required this.icon,
+    required this.label,
+    required this.color,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: color.withValues(alpha: 0.8),
-      borderRadius: BorderRadius.circular(20),
+      color: color.withOpacity(0.1),
+      borderRadius: BorderRadius.circular(30),
       child: InkWell(
-        onTap: () {
-          if (label == "Medicine Reminder") {
-            context.push('/medicine_reminder');
-          } else if (label == "Journaling") {
-            context.push('/daily_journal');
-          }
-        }, // Placeholder for action
-        borderRadius: BorderRadius.circular(20),
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(30),
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(20),
-          ),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(icon, size: 18, color: Colors.white),
+              Icon(icon, size: 18, color: color),
               const SizedBox(width: 8),
               Text(
                 label,
                 style: GoogleFonts.outfit(
-                    color: Colors.white, fontWeight: FontWeight.w500),
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: color,
+                ),
               ),
             ],
           ),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../../../settings/presentation/widgets/dpdp_consent_dialogs.dart';
 
 // Simple entity
 class MoodEntry {
@@ -99,9 +100,15 @@ class MentalHealthScreen extends ConsumerWidget {
             _FeatureCard(
                 title: "Chat with AI Companion (Anonymous)",
                 icon: Icons.chat_bubble,
-                color: Colors.teal,
-                onTap: () {
-                  context.push('/ai_chat');
+                color: Colors.blueGrey,
+                onTap: () async {
+                  // DPDP Compliance: Check consent for mental health AI processing
+                  final hasConsent =
+                      await FeatureConsents.checkMentalHealthConsent(
+                          context, ref);
+                  if (hasConsent && context.mounted) {
+                    context.push('/ai_chat');
+                  }
                 },
                 isWide: true),
 

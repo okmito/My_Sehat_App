@@ -1,4 +1,6 @@
 import 'dart:convert';
+import 'dart:io' show Platform;
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
 import 'package:image_picker/image_picker.dart';
@@ -7,10 +9,14 @@ import 'package:uuid/uuid.dart';
 import '../../domain/models/triage_models.dart';
 
 class DiagnosticsApiService {
-  // Configurable base URL - using localhost for now as per instructions.
-  // In a real app, this should come from an environment config.
-  // Note: For Android Emulator, use 10.0.2.2 instead of 127.0.0.1
-  static const String _baseUrl = 'http://127.0.0.1:8000/api/v1';
+  // Diagnostics backend runs on port 8001
+  // Use 10.0.2.2 for Android Emulator, localhost for others
+  static String get _baseUrl {
+    if (!kIsWeb && Platform.isAndroid) {
+      return 'http://10.0.2.2:8001/api/v1';
+    }
+    return 'http://127.0.0.1:8001/api/v1';
+  }
 
   static const String _userIdKey = 'diagnostics_user_id';
 

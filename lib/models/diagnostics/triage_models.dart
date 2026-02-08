@@ -74,13 +74,32 @@ class FinalResult {
   });
 
   factory FinalResult.fromJson(Map<String, dynamic> json) {
+    // Parse possible_causes - backend returns [{"name": "...", "confidence": 0.6}, ...]
+    List<String> parsedCauses = [];
+    final rawCauses = json['possible_causes'] ?? json['causes'];
+    if (rawCauses is List) {
+      for (var cause in rawCauses) {
+        if (cause is Map) {
+          // Backend format: {"name": "Condition", "confidence": 0.75}
+          final name = cause['name'] ?? '';
+          final confidence = cause['confidence'];
+          if (name.isNotEmpty) {
+            if (confidence != null) {
+              parsedCauses.add('$name (${(confidence * 100).toInt()}% match)');
+            } else {
+              parsedCauses.add(name);
+            }
+          }
+        } else if (cause is String) {
+          parsedCauses.add(cause);
+        }
+      }
+    }
+
     return FinalResult(
       summary: json['summary'] ?? '',
       severity: json['severity'] ?? '',
-      causes: (json['causes'] as List<dynamic>?)
-              ?.map((e) => e.toString())
-              .toList() ??
-          [],
+      causes: parsedCauses,
       homeCare: (json['home_care'] as List<dynamic>?)
               ?.map((e) => e.toString())
               .toList() ??

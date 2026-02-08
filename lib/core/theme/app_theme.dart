@@ -6,9 +6,9 @@ class AppTheme {
     return ThemeData(
       useMaterial3: true,
       colorScheme: ColorScheme.fromSeed(
-        seedColor: const Color(0xFF00BFA5), // Medical Teal
+        seedColor: const Color(0xFF64748B), // Clean Slate
         brightness: Brightness.light,
-        primary: const Color(0xFF00BFA5),
+        primary: const Color(0xFF64748B),
         secondary: const Color(0xFFFF5252), // SOS Red
         surface: Colors.white,
       ),
@@ -37,9 +37,9 @@ class AppTheme {
     return ThemeData(
       useMaterial3: true,
       colorScheme: ColorScheme.fromSeed(
-        seedColor: const Color(0xFF00BFA5),
+        seedColor: const Color(0xFF64748B),
         brightness: Brightness.dark,
-        primary: const Color(0xFF00BFA5),
+        primary: const Color(0xFF94A3B8), // Lighter slate for dark mode
         secondary: const Color(0xFFFF5252),
       ),
       textTheme: GoogleFonts.outfitTextTheme(ThemeData.dark().textTheme),

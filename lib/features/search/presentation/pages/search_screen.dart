@@ -19,15 +19,18 @@ class _SearchScreenState extends State<SearchScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: isDark ? const Color(0xFF0D1117) : Colors.white,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: isDark ? const Color(0xFF0D1117) : Colors.white,
         elevation: 0,
+        iconTheme: IconThemeData(color: isDark ? Colors.white : Colors.black),
         title: Text(
           "Search",
           style: GoogleFonts.outfit(
-            color: Colors.black,
+            color: isDark ? Colors.white : Colors.black,
             fontWeight: FontWeight.bold,
           ),
         ),
@@ -39,15 +42,16 @@ class _SearchScreenState extends State<SearchScreen> {
             // Search Bar
             Container(
               decoration: BoxDecoration(
-                color: Colors.grey[100],
+                color: isDark ? Colors.grey[900] : Colors.grey[100],
                 borderRadius: BorderRadius.circular(12),
               ),
               child: TextField(
                 controller: _searchController,
+                style: TextStyle(color: isDark ? Colors.white : Colors.black),
                 decoration: InputDecoration(
                   hintText: "Search doctors, symptoms...",
-                  hintStyle: GoogleFonts.outfit(color: Colors.grey),
-                  prefixIcon: const Icon(Icons.search, color: Colors.grey),
+                  hintStyle: GoogleFonts.outfit(color: isDark ? Colors.grey[500] : Colors.grey),
+                  prefixIcon: Icon(Icons.search, color: isDark ? Colors.grey[500] : Colors.grey),
                   border: InputBorder.none,
                   contentPadding: const EdgeInsets.symmetric(
                     horizontal: 16,
@@ -63,12 +67,12 @@ class _SearchScreenState extends State<SearchScreen> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(Icons.search_off, size: 64, color: Colors.grey[300]),
+                    Icon(Icons.search_off, size: 64, color: isDark ? Colors.grey[700] : Colors.grey[300]),
                     const SizedBox(height: 16),
                     Text(
                       "Start searching for better health",
                       style: GoogleFonts.outfit(
-                        color: Colors.grey,
+                        color: isDark ? Colors.grey[400] : Colors.grey,
                         fontSize: 16,
                       ),
                     ),

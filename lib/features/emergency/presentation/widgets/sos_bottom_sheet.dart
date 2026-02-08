@@ -1,19 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:geolocator/geolocator.dart';
-import 'package:permission_handler/permission_handler.dart';
 
 import 'sos_slider_button.dart';
 import 'emergency_content_widgets.dart';
-
-final locationProvider = FutureProvider<Position?>((ref) async {
-  final permission = await Permission.location.request();
-  if (permission.isGranted) {
-    return await Geolocator.getCurrentPosition();
-  }
-  return null;
-});
+import '../providers/sos_controller.dart';
+import '../pages/ambulance_tracking_screen.dart';
 
 class SOSBottomSheet extends ConsumerStatefulWidget {
   const SOSBottomSheet({super.key});
@@ -23,38 +15,48 @@ class SOSBottomSheet extends ConsumerStatefulWidget {
 }
 
 class _SOSBottomSheetState extends ConsumerState<SOSBottomSheet> {
+  bool _isSending = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // Prepare location and hospitals in background
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(sosControllerProvider.notifier).prepare();
+    });
+  }
+
   Future<void> _handleSOS() async {
+    if (_isSending) return;
+
+    setState(() => _isSending = true);
+
     try {
-      await Future.delayed(const Duration(milliseconds: 500));
-    } catch (e) {
-      // Handle error cleanly
-    }
+      await ref.read(sosControllerProvider.notifier).triggerSOS();
 
-    if (!mounted) return;
+      if (!mounted) return;
 
-    Navigator.pop(context);
-    showDialog(
-      context: context,
-      builder: (c) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Row(
-          children: [
-            const Icon(Icons.check_circle_rounded, color: Colors.green),
-            const SizedBox(width: 8),
-            Text("SOS Sent!", style: GoogleFonts.outfit()),
-          ],
+      // Close the bottom sheet
+      Navigator.pop(context);
+
+      // Navigate to tracking screen
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => const AmbulanceTrackingScreen(),
         ),
-        content: Text(
-            "Emergency contacts have been notified with your current location.",
-            style: GoogleFonts.outfit()),
-        actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(c),
-              child: Text("OK",
-                  style: GoogleFonts.outfit(fontWeight: FontWeight.bold)))
-        ],
-      ),
-    );
+      );
+    } catch (e) {
+      if (!mounted) return;
+
+      setState(() => _isSending = false);
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to send SOS: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
 
   @override
@@ -129,10 +131,42 @@ class _SOSBottomSheetState extends ConsumerState<SOSBottomSheet> {
                     const SizedBox(height: 32),
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 24),
-                      child: SOSSliderButton(
-                        onSlideComplete: _handleSOS,
-                        text: "SLIDE TO SEND SOS",
-                      ),
+                      child: _isSending
+                          ? Container(
+                              height: 60,
+                              decoration: BoxDecoration(
+                                color: Colors.red.shade100,
+                                borderRadius: BorderRadius.circular(30),
+                              ),
+                              child: Center(
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    SizedBox(
+                                      width: 24,
+                                      height: 24,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 3,
+                                        color: Colors.red.shade700,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Text(
+                                      'Sending SOS...',
+                                      style: GoogleFonts.outfit(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.red.shade700,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            )
+                          : SOSSliderButton(
+                              onSlideComplete: _handleSOS,
+                              text: "SLIDE TO SEND SOS",
+                            ),
                     ),
                     const SizedBox(height: 32),
                     Divider(height: 1, color: Colors.grey.shade200),

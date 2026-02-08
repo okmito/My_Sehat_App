@@ -1,9 +1,17 @@
+import 'dart:io';
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/ai_triage_response.dart';
 
-// For Flutter Web (Chrome), use 127.0.0.1. Port 8000 (FastAPI default).
-const String kAiMentalHealthBaseUrl = "http://127.0.0.1:8000";
+// Mental Health backend runs on port 8003
+// Use 10.0.2.2 for Android emulator, localhost for others
+String get kAiMentalHealthBaseUrl {
+  if (!kIsWeb && Platform.isAndroid) {
+    return "http://10.0.2.2:8003";
+  }
+  return "http://127.0.0.1:8003";
+}
 
 final aiTriageServiceProvider = Provider<AiTriageService>((ref) {
   return AiTriageService(Dio(BaseOptions(
@@ -24,7 +32,7 @@ class AiTriageService {
   }) async {
     try {
       final response = await _dio.post(
-        '/mental-health/chat/message', // Correct endpoint
+        '/chat/message', // Correct endpoint (no prefix)
         data: {
           'message': message,
           'user_id': sessionId, // Backend expects 'user_id'

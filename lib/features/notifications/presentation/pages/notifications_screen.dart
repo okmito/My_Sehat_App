@@ -58,8 +58,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                 ScaffoldMessenger.of(context).hideCurrentSnackBar();
               },
               style: TextButton.styleFrom(
-                foregroundColor:
-                    Colors.blueAccent, // Use your app's accent color
+                foregroundColor: Colors.blueAccent,
                 padding: EdgeInsets.zero,
                 minimumSize: const Size(50, 30),
                 tapTargetSize: MaterialTapTargetSize.shrinkWrap,
@@ -75,32 +74,41 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: isDark ? const Color(0xFF0D1117) : Colors.white,
       appBar: AppBar(
         title: Text(
           "Notifications",
           style: GoogleFonts.outfit(
-            color: Colors.black,
+            color: isDark ? Colors.white : Colors.black,
             fontWeight: FontWeight.bold,
           ),
         ),
-        backgroundColor: Colors.white,
+        backgroundColor: isDark ? const Color(0xFF0D1117) : Colors.white,
         elevation: 0,
+        iconTheme: IconThemeData(color: isDark ? Colors.white : Colors.black),
         actions: [
           if (notifications.isNotEmpty)
             IconButton(
               onPressed: _clearNotifications,
-              icon: const Icon(Icons.delete_outline, color: Colors.grey),
+              icon: Icon(
+                Icons.delete_outline,
+                color: isDark ? Colors.grey[400] : Colors.grey,
+              ),
               tooltip: "Clear All",
             )
         ],
       ),
       body: notifications.isEmpty
-          ? _buildEmptyState()
+          ? _buildEmptyState(isDark)
           : ListView.separated(
               itemCount: notifications.length,
-              separatorBuilder: (context, index) => const Divider(height: 1),
+              separatorBuilder: (context, index) => Divider(
+                height: 1,
+                color: isDark ? Colors.grey[800] : Colors.grey[200],
+              ),
               itemBuilder: (context, index) {
                 final notification = notifications[index];
                 return Dismissible(
@@ -152,7 +160,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                         const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                     leading: CircleAvatar(
                       backgroundColor:
-                          notification['color'].withValues(alpha: 0.1),
+                          notification['color'].withValues(alpha: isDark ? 0.2 : 0.1),
                       child: Icon(
                         notification['icon'],
                         color: notification['color'],
@@ -163,7 +171,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                       notification['title'],
                       style: GoogleFonts.outfit(
                         fontWeight: FontWeight.w600,
-                        color: Colors.black87,
+                        color: isDark ? Colors.white : Colors.black87,
                       ),
                     ),
                     subtitle: Column(
@@ -173,7 +181,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                         Text(
                           notification['body'],
                           style: GoogleFonts.outfit(
-                            color: Colors.black54,
+                            color: isDark ? Colors.grey[400] : Colors.black54,
                             fontSize: 13,
                           ),
                         ),
@@ -181,7 +189,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                         Text(
                           notification['time'],
                           style: GoogleFonts.outfit(
-                            color: Colors.grey,
+                            color: isDark ? Colors.grey[500] : Colors.grey,
                             fontSize: 11,
                           ),
                         ),
@@ -189,7 +197,9 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                     ),
                     tileColor: notification['isRead']
                         ? Colors.transparent
-                        : Colors.blue.withValues(alpha: 0.05),
+                        : (isDark 
+                            ? Colors.blue.withValues(alpha: 0.1)
+                            : Colors.blue.withValues(alpha: 0.05)),
                   ),
                 );
               },
@@ -197,7 +207,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     );
   }
 
-  Widget _buildEmptyState() {
+  Widget _buildEmptyState(bool isDark) {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -205,13 +215,13 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
           Container(
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
-              color: Colors.grey[100],
+              color: isDark ? Colors.grey[800] : Colors.grey[100],
               shape: BoxShape.circle,
             ),
             child: Icon(
               Icons.notifications_off_outlined,
               size: 64,
-              color: Colors.grey[400],
+              color: isDark ? Colors.grey[600] : Colors.grey[400],
             ),
           ),
           const SizedBox(height: 24),
@@ -220,14 +230,14 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
             style: GoogleFonts.outfit(
               fontSize: 20,
               fontWeight: FontWeight.bold,
-              color: Colors.black87,
+              color: isDark ? Colors.white : Colors.black87,
             ),
           ),
           const SizedBox(height: 8),
           Text(
             "You're all caught up! Check back later.",
             style: GoogleFonts.outfit(
-              color: Colors.grey,
+              color: isDark ? Colors.grey[400] : Colors.grey,
               fontSize: 16,
             ),
           ),

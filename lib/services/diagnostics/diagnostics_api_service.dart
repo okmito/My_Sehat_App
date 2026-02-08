@@ -1,14 +1,37 @@
+import 'dart:io';
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../models/diagnostics/triage_models.dart';
 
 class DiagnosticsApiService {
-  final Dio _dio = Dio(
-    BaseOptions(
-      baseUrl: 'http://127.0.0.1:8000',
-      validateStatus: (status) => status! < 500, // Handle 400s manually
-    ),
-  );
+  late final Dio _dio;
+
+  DiagnosticsApiService() {
+    // Diagnostics backend runs on port 8001
+    // Use 10.0.2.2 for Android emulator, localhost for others
+    final baseUrl = (!kIsWeb && Platform.isAndroid)
+        ? 'http://10.0.2.2:8001'
+        : 'http://127.0.0.1:8001';
+
+    _dio = Dio(
+      BaseOptions(
+        baseUrl: baseUrl,
+        validateStatus: (status) => status! < 500, // Handle 400s manually
+        connectTimeout: const Duration(seconds: 30),
+        receiveTimeout: const Duration(seconds: 60),
+      ),
+    );
+
+    // Add logging in debug mode
+    if (kDebugMode) {
+      _dio.interceptors.add(LogInterceptor(
+        requestBody: true,
+        responseBody: true,
+        logPrint: (object) => debugPrint('[Diagnostics API] $object'),
+      ));
+    }
+  }
 
   Future<TriageResponse> startTextTriage({
     required String userId,
@@ -19,7 +42,7 @@ class DiagnosticsApiService {
   }) async {
     try {
       final response = await _dio.post(
-        '/diagnostics/triage/text',
+        '/api/v1/triage/text',
         options: Options(headers: {'X-User-Id': userId}),
         data: {
           'symptoms': symptoms,
@@ -46,7 +69,7 @@ class DiagnosticsApiService {
   }) async {
     try {
       final response = await _dio.post(
-        '/diagnostics/triage/session/$sessionId/answer',
+        '/api/v1/triage/session/$sessionId/answer',
         options: Options(headers: {'X-User-Id': userId}),
         data: {'answer': answer},
       );
@@ -71,7 +94,7 @@ class DiagnosticsApiService {
   }) async {
     try {
       final response = await _dio.post(
-        '/diagnostics/triage/session/$sessionId/text',
+        '/api/v1/triage/session/$sessionId/text',
         options: Options(headers: {'X-User-Id': userId}),
         data: {
           'symptoms': symptoms,
@@ -115,7 +138,7 @@ class DiagnosticsApiService {
       });
 
       final response = await _dio.post(
-        '/diagnostics/triage/image',
+        '/api/v1/triage/image',
         options: Options(headers: {'X-User-Id': userId}),
         data: formData,
       );

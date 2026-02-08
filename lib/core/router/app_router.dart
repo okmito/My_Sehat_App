@@ -2,10 +2,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../features/auth/presentation/pages/login_screen.dart';
+import '../../../features/auth/presentation/pages/signup_screen.dart';
 import '../../../features/auth/presentation/pages/profile_screen.dart';
 import '../../../features/home/presentation/pages/home_screen.dart';
 import '../../../features/emergency/presentation/pages/sos_screen.dart';
 import '../../../features/emergency/presentation/pages/emergency_contacts_screen.dart';
+import '../../../features/emergency/presentation/pages/ambulance_tracking_screen.dart';
 
 import '../../../features/symptom_check/presentation/pages/diagnostics_entry_screen.dart';
 import '../../../features/symptom_check/presentation/pages/diagnostics_chat_screen.dart';
@@ -17,6 +19,7 @@ import '../../../features/settings/presentation/pages/language_selection_screen.
 import '../../../features/settings/presentation/pages/app_info_screen.dart';
 import '../../../features/settings/presentation/pages/help_support_screen.dart';
 import '../../../features/settings/presentation/pages/settings_screen.dart';
+import '../../../features/settings/presentation/pages/my_data_privacy_screen.dart';
 import 'main_wrapper_screen.dart';
 
 import '../../../features/search/presentation/pages/search_screen.dart';
@@ -26,6 +29,7 @@ import '../../../features/daily_journal/journal_list_page.dart';
 import '../../../features/stress_games/stress_games_page.dart';
 import '../../../features/medicine_reminder/medicine_reminder_page.dart';
 import '../../../features/mental_health/ai_chat/ai_triage_chat_screen.dart';
+import '../../../features/health_records/presentation/pages/health_records_screen.dart';
 
 final goRouterProvider = Provider<GoRouter>((ref) {
   return GoRouter(
@@ -44,6 +48,10 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/login',
         builder: (context, state) => const LoginScreen(),
+      ),
+      GoRoute(
+        path: '/signup',
+        builder: (context, state) => const SignupScreen(),
       ),
       // Stateful Shell Route for Bottom Navigation
       StatefulShellRoute.indexedStack(
@@ -108,6 +116,10 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const EmergencyContactsScreen(),
       ),
       GoRoute(
+        path: '/ambulance-tracking',
+        builder: (context, state) => const AmbulanceTrackingScreen(),
+      ),
+      GoRoute(
         path: '/language-selection',
         builder: (context, state) => const LanguageSelectionScreen(),
       ),
@@ -163,6 +175,14 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/ai_chat',
         builder: (context, state) => const AiTriageChatScreen(),
+      ),
+      GoRoute(
+        path: '/health-records',
+        builder: (context, state) => const HealthRecordsScreen(),
+      ),
+      GoRoute(
+        path: '/my-data-privacy',
+        builder: (context, state) => const MyDataPrivacyScreen(),
       ),
     ],
   );

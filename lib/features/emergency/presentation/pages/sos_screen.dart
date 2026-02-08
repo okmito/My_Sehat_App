@@ -1,18 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:geolocator/geolocator.dart';
-import 'package:permission_handler/permission_handler.dart';
 import '../widgets/sos_slider_button.dart';
 import '../widgets/emergency_content_widgets.dart';
-
-final sosLocationProvider = FutureProvider<Position?>((ref) async {
-  final permission = await Permission.location.request();
-  if (permission.isGranted) {
-    return await Geolocator.getCurrentPosition();
-  }
-  return null;
-});
+import '../providers/sos_controller.dart';
+import 'ambulance_tracking_screen.dart';
+import '../../../settings/presentation/widgets/dpdp_consent_dialogs.dart';
+import '../../../settings/presentation/pages/my_data_privacy_screen.dart';
 
 class SOSScreen extends ConsumerStatefulWidget {
   const SOSScreen({super.key});
@@ -25,6 +19,7 @@ class _SOSScreenState extends ConsumerState<SOSScreen>
     with SingleTickerProviderStateMixin {
   late AnimationController _pulseController;
   late Animation<double> _pulseAnimation;
+  bool _isSending = false;
 
   @override
   void initState() {
@@ -37,6 +32,11 @@ class _SOSScreenState extends ConsumerState<SOSScreen>
     _pulseAnimation = Tween<double>(begin: 1.0, end: 1.2).animate(
       CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
     );
+
+    // Prepare location and hospitals
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(sosControllerProvider.notifier).prepare();
+    });
   }
 
   @override
@@ -46,40 +46,56 @@ class _SOSScreenState extends ConsumerState<SOSScreen>
   }
 
   Future<void> _triggerSOS() async {
-    try {
-      final position = await ref.read(sosLocationProvider.future);
-      await Future.delayed(const Duration(seconds: 2));
+    if (_isSending) return;
 
+    // DPDP Compliance: Check consent before sharing emergency data
+    final hasConsent = await FeatureConsents.checkSOSConsent(context, ref);
+    if (!hasConsent) {
       if (mounted) {
-        showDialog(
-          context: context,
-          builder: (c) => AlertDialog(
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-            title: Row(
-              children: [
-                const Icon(Icons.check_circle, color: Colors.green),
-                const SizedBox(width: 8),
-                Text("SOS Sent!", style: GoogleFonts.outfit()),
-              ],
-            ),
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
             content: Text(
-              "Emergency contacts notified.\nLocation: ${position?.latitude ?? 'Unknown'}, ${position?.longitude ?? 'Unknown'}",
+              'SOS requires consent to share location and medical data',
               style: GoogleFonts.outfit(),
             ),
-            actions: [
-              TextButton(
-                  onPressed: () => Navigator.pop(c),
-                  child: Text("OK",
-                      style: GoogleFonts.outfit(fontWeight: FontWeight.bold)))
-            ],
+            backgroundColor: Colors.orange,
+            action: SnackBarAction(
+              label: 'Settings',
+              textColor: Colors.white,
+              onPressed: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                      builder: (_) => const MyDataPrivacyScreen()),
+                );
+              },
+            ),
+          ),
+        );
+      }
+      return;
+    }
+
+    setState(() => _isSending = true);
+
+    try {
+      await ref.read(sosControllerProvider.notifier).triggerSOS();
+
+      if (mounted) {
+        // Navigate to tracking screen
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (_) => const AmbulanceTrackingScreen(),
           ),
         );
       }
     } catch (e) {
       if (mounted) {
+        setState(() => _isSending = false);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to send SOS: $e')),
+          SnackBar(
+            content: Text('Failed to send SOS: $e'),
+            backgroundColor: Colors.red,
+          ),
         );
       }
     }
@@ -176,10 +192,43 @@ class _SOSScreenState extends ConsumerState<SOSScreen>
                 ),
                 const SizedBox(height: 48),
                 Center(
-                  child: SOSSliderButton(
-                    onSlideComplete: _triggerSOS,
-                    text: "SLIDE FOR SOS",
-                  ),
+                  child: _isSending
+                      ? Container(
+                          height: 60,
+                          width: 280,
+                          decoration: BoxDecoration(
+                            color: Colors.red.shade100,
+                            borderRadius: BorderRadius.circular(30),
+                          ),
+                          child: Center(
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                SizedBox(
+                                  width: 24,
+                                  height: 24,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 3,
+                                    color: Colors.red.shade700,
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Text(
+                                  'Sending SOS...',
+                                  style: GoogleFonts.outfit(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.red.shade700,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        )
+                      : SOSSliderButton(
+                          onSlideComplete: _triggerSOS,
+                          text: "SLIDE FOR SOS",
+                        ),
                 ),
                 const SizedBox(height: 48),
                 const EmergencyContactsWidget(),

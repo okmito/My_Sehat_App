@@ -157,15 +157,17 @@ class _DiagnosticsChatScreenState extends ConsumerState<DiagnosticsChatScreen> {
                   ],
                 ),
               ),
-            if (state.currentQuestion != null && !state.isLoading)
-              _QuestionCard(
-                question: state.currentQuestion!,
-                onAnswer: (answer) {
+            if (state.currentQuestion != null &&
+                state.currentQuestion!.options != null &&
+                state.currentQuestion!.options!.isNotEmpty &&
+                !state.isLoading)
+              _QuickSuggestions(
+                options: state.currentQuestion!.options!,
+                onSelect: (answer) {
                   ref.read(diagnosticsProvider.notifier).sendAnswer(answer);
                 },
-              )
-            else
-              _buildInputArea(state),
+              ),
+            _buildInputArea(state),
           ],
         ),
       ),
@@ -173,15 +175,8 @@ class _DiagnosticsChatScreenState extends ConsumerState<DiagnosticsChatScreen> {
   }
 
   Widget _buildInputArea(DiagnosticsState state) {
-    // Hide input if we are waiting for a selection on a question card
-    // BUT we might want to allow custom text if allow_custom is true or if it's the initial state.
-    // Logic: If there is a question and it DOES NOT allow custom, hide text input.
-    // If there is no question (initial state) OR question allows custom, show input.
-
-    final bool showInput = state.currentQuestion == null ||
-        (state.currentQuestion?.allowCustom ?? false);
-
-    if (!showInput) return const SizedBox.shrink();
+    // Always show text input - users should always be able to type freely
+    // Options are just quick suggestions, not mandatory selections
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -242,14 +237,13 @@ class _DiagnosticsChatScreenState extends ConsumerState<DiagnosticsChatScreen> {
     final state = ref.read(diagnosticsProvider);
 
     if (state.sessionId == null) {
-      // First message
+      // First message - start a new triage session
       ref.read(diagnosticsProvider.notifier).startTextTriage(text);
+    } else if (state.currentQuestion != null) {
+      // There's a pending question - send as answer
+      ref.read(diagnosticsProvider.notifier).sendAnswer(text);
     } else {
-      // Follow-up answer (custom text) or session update
-      // If we are currently "Answer Question" state but user types text:
-      // Prompt says: "If user types text instead of clicking options: call sendSessionText()"
-      // But we should check if sendAnswer logic fits better if it's just an answer.
-      // However, sendSessionText includes symptoms update? No, sendSessionText adds to session.
+      // No pending question - add more symptoms to session
       ref.read(diagnosticsProvider.notifier).sendSessionText(text);
     }
     _textController.clear();
@@ -395,65 +389,46 @@ class _ChatMessageBubble extends StatelessWidget {
   }
 }
 
-class _QuestionCard extends StatelessWidget {
-  final Question question;
-  final Function(String) onAnswer;
+class _QuickSuggestions extends StatelessWidget {
+  final List<dynamic> options;
+  final Function(String) onSelect;
 
-  const _QuestionCard({required this.question, required this.onAnswer});
+  const _QuickSuggestions({required this.options, required this.onSelect});
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            offset: const Offset(0, -4),
-            blurRadius: 16,
-          )
-        ],
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Text(
-            question.text,
+            "Quick suggestions:",
             style: GoogleFonts.outfit(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
+              fontSize: 12,
+              color: Colors.grey.shade600,
             ),
           ),
-          const SizedBox(height: 16),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: (question.options ?? []).map((option) {
-              return ActionChip(
-                label: Text(option.toString()),
-                labelStyle: GoogleFonts.outfit(fontSize: 14),
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(20)),
-                onPressed: () => onAnswer(option.toString()),
-              );
-            }).toList(),
-          ),
-          if (question.allowCustom) ...[
-            const SizedBox(height: 8),
-            Text(
-              "Or type a custom answer below:",
-              style: GoogleFonts.outfit(
-                fontSize: 12,
-                color: Colors.grey,
-                fontStyle: FontStyle.italic,
-              ),
+          const SizedBox(height: 8),
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: options.map((option) {
+                return Padding(
+                  padding: const EdgeInsets.only(right: 8),
+                  child: ActionChip(
+                    label: Text(option.toString()),
+                    labelStyle: GoogleFonts.outfit(fontSize: 13),
+                    backgroundColor: Colors.grey.shade100,
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20)),
+                    onPressed: () => onSelect(option.toString()),
+                  ),
+                );
+              }).toList(),
             ),
-          ]
+          ),
         ],
       ),
     );

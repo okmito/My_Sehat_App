@@ -65,7 +65,7 @@ class MessageBubble extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: Colors.teal.shade50,
+                    color: Colors.blueGrey.shade50,
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Column(
@@ -76,7 +76,7 @@ class MessageBubble extends StatelessWidget {
                         style: GoogleFonts.outfit(
                           fontWeight: FontWeight.bold,
                           fontSize: 14,
-                          color: Colors.teal.shade800,
+                          color: Colors.blueGrey.shade800,
                         ),
                       ),
                       const SizedBox(height: 4),
@@ -86,14 +86,14 @@ class MessageBubble extends StatelessWidget {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Icon(Icons.check_circle_outline,
-                                    size: 14, color: Colors.teal.shade600),
+                                    size: 14, color: Colors.blueGrey.shade600),
                                 const SizedBox(width: 6),
                                 Expanded(
                                   child: Text(
                                     advice,
                                     style: GoogleFonts.outfit(
                                       fontSize: 14,
-                                      color: Colors.teal.shade900,
+                                      color: Colors.blueGrey.shade900,
                                     ),
                                   ),
                                 ),

@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SOS | Live Tracker</title>
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css" crossorigin=""
+        referrerpolicy="no-referrer" />
+    <!-- Leaflet JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js" crossorigin=""
+        referrerpolicy="no-referrer"></script>
+    <style>
+        /* Base Reset */
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', 'Segoe UI', Roboto, sans-serif;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+            background: #f0f2f5;
+        }
+
+        /* Full Screen Map */
+        #map {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: 1;
+        }
+
+        /* Glassmorphism Panel */
+        .glass-panel {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            padding: 24px;
+            z-index: 1000;
+            transition: all 0.3s ease;
+        }
+
+        /* Sidebar Overlay */
+        #sidebar {
+            top: 20px;
+            left: 20px;
+            width: 320px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        /* Typography */
+        h2 {
+            margin: 0;
+            font-size: 1.5rem;
+            color: #1a1a1a;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        label {
+            font-size: 0.85rem;
+            color: #666;
+            font-weight: 500;
+            margin-bottom: 4px;
+            display: block;
+        }
+
+        /* Inputs & Buttons */
+        input,
+        select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.9);
+            font-size: 1rem;
+            box-sizing: border-box;
+            outline: none;
+        }
+
+        input:focus,
+        select:focus {
+            border-color: #007bff;
+        }
+
+        button {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.1s, opacity 0.2s;
+        }
+
+        button:active {
+            transform: scale(0.98);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #ff6b6b, #ee5253);
+            color: white;
+            box-shadow: 0 4px 15px rgba(238, 82, 83, 0.3);
+        }
+
+        .btn-primary {
+            background: white;
+            color: #333;
+            border: 1px solid #ddd;
+        }
+
+        .btn-primary:hover {
+            background: #f8f9fa;
+        }
+
+        /* Status Pills */
+        .status-box {
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            font-weight: 700;
+            color: white;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-size: 0.9rem;
+            margin-bottom: 15px;
+        }
+
+        .Triggered {
+            background: #ff4757;
+            animation: pulse 1.5s infinite;
+        }
+
+        .Acknowledged {
+            background: #ffa502;
+            color: #fff;
+        }
+
+        .OnTheWay {
+            background: #2ed573;
+        }
+
+        .Resolved {
+            background: #1e90ff;
+        }
+
+        @keyframes pulse {
+            0% {
+                opacity: 1;
+                transform: scale(1);
+            }
+
+            50% {
+                opacity: 0.8;
+                transform: scale(0.98);
+            }
+
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        /* Info Display */
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .info-item {
+            background: rgba(255, 255, 255, 0.6);
+            padding: 10px;
+            border-radius: 8px;
+        }
+
+        .info-label {
+            font-size: 0.75rem;
+            color: #666;
+            display: block;
+        }
+
+        .info-val {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #333;
+        }
+
+        /* Floating Action Button (My Location) */
+        #fab-location {
+            position: absolute;
+            bottom: 30px;
+            right: 30px;
+            width: 56px;
+            height: 56px;
+            background: white;
+            border-radius: 50%;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            cursor: pointer;
+            z-index: 1001;
+            transition: transform 0.2s;
+        }
+
+        #fab-location:hover {
+            transform: scale(1.1);
+        }
+
+        #fab-location:active {
+            transform: scale(0.9);
+        }
+
+        /* Emoji Icons */
+        .emoji-icon {
+            font-size: 32px;
+            text-align: center;
+            line-height: 1;
+            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+        }
+
+        /* Pulse effect for user */
+        .user-pulse {
+            animation: bounce 2s infinite;
+        }
+
+        @keyframes bounce {
+
+            0%,
+            100% {
+                transform: translateY(0);
+            }
+
+            50% {
+                transform: translateY(-5px);
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Map Container -->
+    <div id="map"></div>
+
+    <!-- Sidebar Panel -->
+    <div id="sidebar" class="glass-panel">
+        <h2>🚑 SOS System</h2>
+
+        <!-- Create SOS Section -->
+        <div id="create-panel">
+            <p style="font-size: 0.9rem; color: #555; line-height: 1.5;">
+                Emergency? Trigger an SOS immediately. We are tracking your location.
+            </p>
+            <div>
+                <label>Name / ID</label>
+                <input type="text" id="user-id" value="demo_user_1">
+            </div>
+            <div style="margin-top: 10px;">
+                <label>Emergency Type</label>
+                <select id="type">
+                    <option value="Medical">Medical 🏥</option>
+                    <option value="Fire">Fire 🔥</option>
+                    <option value="Police">Police 🚓</option>
+                </select>
+            </div>
+            <div style="margin-top: 20px;">
+                <button class="btn-danger" onclick="triggerSOS()">🚨 TRIGGER SOS</button>
+            </div>
+        </div>
+
+        <!-- Live Status Section (Hidden initially) -->
+        <div id="status-panel" style="display: none;">
+            <div id="status-display" class="status-box">Connecting...</div>
+
+            <div class="info-grid">
+                <div class="info-item">
+                    <span class="info-label">Ambulance</span>
+                    <span class="info-val" id="amb-id">--</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">SOS ID</span>
+                    <span class="info-val" id="sos-id">--</span>
+                </div>
+            </div>
+
+            <div id="route-stats"
+                style="margin-top: 15px; background: #e3f2fd; padding:12px; border-radius:8px; display:none;">
+                <div class="info-grid">
+                    <div>
+                        <span class="info-label">Distance</span>
+                        <span class="info-val" id="dist-val">-- km</span>
+                    </div>
+                    <div>
+                        <span class="info-label">ETA</span>
+                        <span class="info-val" id="eta-val">-- min</span>
+                    </div>
+                </div>
+            </div>
+
+            <div style="margin-top: 20px;">
+                <button class="btn-primary" onclick="window.location.reload()">Start New SOS</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- FAB -->
+    <div id="fab-location" onclick="recenterMap()" title="My Location">📍</div>
+
+    <script>
+        let map, userMarker, userHalo, ambulanceMarker, hospitalMarkers = [];
+        let routeLine = null;
+        // Default to New Delhi immediately so user isn't blocked
+        let userLat = 28.61, userLon = 77.20;
+        let currentSosId = null;
+        let pollInterval = null;
+
+        // Icons
+        const Icons = {
+            User: L.divIcon({ className: 'emoji-icon user-pulse', html: '📍', iconSize: [30, 30], iconAnchor: [15, 30] }),
+            Ambulance: L.divIcon({ className: 'emoji-icon', html: '🚑', iconSize: [35, 35], iconAnchor: [17, 17] }),
+            Hospital: L.divIcon({ className: 'emoji-icon', html: '🏥', iconSize: [30, 30], iconAnchor: [15, 15] })
+        };
+
+        // Init
+        window.onload = () => {
+            // Check Leaflet
+            if (typeof L === 'undefined') {
+                alert("Leaflet JS failed to load. Check internet.");
+                return;
+            }
+
+            // Init Map (Default View)
+            map = L.map('map', { zoomControl: false }).setView([userLat, userLon], 13);
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+                attribution: '&copy; OpenStreetMap &copy; CARTO',
+                subdomains: 'abcd',
+                maxZoom: 19
+            }).addTo(map);
+
+            // Force map resize to fix tile issues
+            setTimeout(() => { map.invalidateSize(); }, 500);
+
+            // Show default marker immediately (updated later if geo succeeds)
+            updateUserLocation(userLat, userLon, false);
+            fetchHospitals(userLat, userLon);
+
+            // Get Real Location
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(pos => {
+                    userLat = pos.coords.latitude;
+                    userLon = pos.coords.longitude;
+                    updateUserLocation(userLat, userLon, true);
+                    fetchHospitals(userLat, userLon); // Refresh hospitals
+                }, err => {
+                    console.warn("Geo Error or Denied, using default");
+                    // No alert needed, just keep default
+                });
+            }
+        };
+
+        function updateUserLocation(lat, lon, panTo) {
+            if (userMarker) map.removeLayer(userMarker);
+            if (userHalo) map.removeLayer(userHalo);
+
+            // Add Halo
+            userHalo = L.circle([lat, lon], {
+                color: '#4a90e2',
+                fillColor: '#4a90e2',
+                fillOpacity: 0.4, // Stronger
+                radius: 200, // meters
+                weight: 1
+            }).addTo(map);
+
+            userMarker = L.marker([lat, lon], { icon: Icons.User, zIndexOffset: 900 }).addTo(map).bindPopup("<b>You</b>");
+
+            if (panTo) map.setView([lat, lon], 15);
+        }
+
+        function recenterMap() {
+            map.setView([userLat, userLon], 16, { animate: true });
+        }
+
+        async function fetchHospitals(lat, lon) {
+            // clear existing
+            hospitalMarkers.forEach(In => map.removeLayer(In));
+            hospitalMarkers = [];
+
+            try {
+                const res = await fetch(`/hospitals/nearby?lat=${lat}&lon=${lon}`);
+                const data = await res.json();
+                data.forEach(h => {
+                    let m = L.marker([h.lat, h.lon], { icon: Icons.Hospital })
+                        .addTo(map)
+                        .bindPopup(`<b>${h.name}</b><br>${h.distance_km}km`);
+                    hospitalMarkers.push(m);
+                });
+            } catch (e) { console.error("Hospital fetch error", e); }
+        }
+
+        async function triggerSOS() {
+            const uid = document.getElementById('user-id').value;
+            const type = document.getElementById('type').value;
+
+            // No check for !userLat needed as it has defaults now
+
+            try {
+                const res = await fetch('/sos/', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ user_id: uid, latitude: userLat, longitude: userLon, emergency_type: type })
+                });
+                const data = await res.json();
+
+                if (data.id) {
+                    currentSosId = data.id;
+                    // Switch UI
+                    document.getElementById('create-panel').style.display = 'none';
+                    document.getElementById('status-panel').style.display = 'block';
+                    document.getElementById('sos-id').innerText = "#" + data.id;
+
+                    // Start Polling
+                    pollInterval = setInterval(pollStatus, 2000);
+                    pollStatus();
+                }
+            } catch (e) { alert("Error triggering SOS"); }
+        }
+
+        async function pollStatus() {
+            if (!currentSosId) return;
+            try {
+                const res = await fetch(`/sos/${currentSosId}`);
+                const data = await res.json();
+
+                // Status
+                const box = document.getElementById('status-display');
+                box.innerText = data.status.replace(/_/g, " ");
+                box.className = "status-box " + data.status;
+
+                document.getElementById('amb-id').innerText = data.assigned_ambulance_id || "Searching...";
+
+                // Draw Route
+                if (data.route_coords) {
+                    const path = JSON.parse(data.route_coords);
+                    // Slice path to start from current progress (Visual polish: Line shrinks as amb moves)
+                    // Fallback to 0 if progress undefined
+                    const progress = data.route_progress || 0;
+
+                    // Convert to Leaflet [lat, lon]
+                    let latLngs = path.slice(progress).map(p => [p[1], p[0]]);
+
+                    // 1. Snap Start to Ambulance (smoothness)
+                    if (data.ambulance_lat && data.ambulance_lon) {
+                        latLngs.unshift([data.ambulance_lat, data.ambulance_lon]);
+                    }
+
+                    // 2. Snap End to User (fix "Gap" issue)
+                    if (userLat && userLon) {
+                        latLngs.push([userLat, userLon]);
+                    }
+
+                    if (routeLine) {
+                        routeLine.setLatLngs(latLngs);
+                    } else {
+                        routeLine = L.polyline(latLngs, { color: '#3498db', weight: 6, opacity: 0.8 }).addTo(map);
+                        map.fitBounds(routeLine.getBounds(), { padding: [50, 50] });
+                    }
+                } else if (data.ambulance_lat && data.ambulance_lon && userLat && userLon) {
+                    // Fallback: Straight dashed line if OSRM unavailable
+                    const latLngs = [[data.ambulance_lat, data.ambulance_lon], [userLat, userLon]];
+                    if (routeLine) {
+                        routeLine.setLatLngs(latLngs);
+                        routeLine.setStyle({ dashArray: '10, 10', opacity: 0.5 });
+                    } else {
+                        routeLine = L.polyline(latLngs, { color: '#3498db', weight: 4, dashArray: '10, 10', opacity: 0.5 }).addTo(map);
+                    }
+                }
+
+                // Ambulance Marker
+                if (data.ambulance_lat && data.ambulance_lon) {
+                    const loc = [data.ambulance_lat, data.ambulance_lon];
+
+                    if (ambulanceMarker) {
+                        ambulanceMarker.setLatLng(loc);
+                    } else {
+                        // High Z-index to stand out
+                        ambulanceMarker = L.marker(loc, { icon: Icons.Ambulance, zIndexOffset: 1000 }).addTo(map).bindPopup("<b>Ambulance</b>");
+                    }
+
+                    // Stats
+                    if (userLat) {
+                        const dist = getDist(userLat, userLon, loc[0], loc[1]);
+                        const eta = Math.ceil((dist / 40) * 60); // 40km/h
+
+                        document.getElementById('route-stats').style.display = 'block';
+                        document.getElementById('dist-val').innerText = dist.toFixed(1) + " km";
+                        document.getElementById('eta-val').innerText = "~" + eta + " min";
+                    }
+                }
+
+                if (data.status === "Resolved") {
+                    clearInterval(pollInterval);
+                    alert("✅ Emergency Resolved! Ambulance has arrived.");
+                }
+
+            } catch (e) {
+                console.error("Poll Error", e);
+            }
+        }
+
+        function getDist(lat1, lon1, lat2, lon2) {
+            const R = 6371;
+            const dLat = (lat2 - lat1) * Math.PI / 180;
+            const dLon = (lon2 - lon1) * Math.PI / 180;
+            const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                Math.sin(dLon / 2) * Math.sin(dLon / 2);
+            return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        }
+    </script>
+</body>
+
+</html>

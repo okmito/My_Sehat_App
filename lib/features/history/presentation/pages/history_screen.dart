@@ -76,29 +76,32 @@ class _HistoryScreenState extends State<HistoryScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: isDark ? const Color(0xFF0D1117) : Colors.white,
       appBar: AppBar(
         title: Text(
           "Medical History",
           style: GoogleFonts.outfit(
-            color: Colors.black,
+            color: isDark ? Colors.white : Colors.black,
             fontWeight: FontWeight.bold,
           ),
         ),
-        backgroundColor: Colors.white,
+        backgroundColor: isDark ? const Color(0xFF0D1117) : Colors.white,
         elevation: 0,
+        iconTheme: IconThemeData(color: isDark ? Colors.white : Colors.black),
         actions: [
           if (historyItems.isNotEmpty)
             IconButton(
               onPressed: _clearHistory,
-              icon: const Icon(Icons.delete_outline, color: Colors.grey),
+              icon: Icon(Icons.delete_outline, color: isDark ? Colors.grey[400] : Colors.grey),
               tooltip: "Clear History",
             )
         ],
       ),
       body: historyItems.isEmpty
-          ? _buildEmptyState()
+          ? _buildEmptyState(isDark)
           : ListView.separated(
               padding: const EdgeInsets.all(16),
               itemCount: historyItems.length,
@@ -108,12 +111,12 @@ class _HistoryScreenState extends State<HistoryScreen> {
                 return Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: isDark ? const Color(0xFF161B22) : Colors.white,
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.grey[200]!),
+                    border: Border.all(color: isDark ? Colors.grey[800]! : Colors.grey[200]!),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.grey.withValues(alpha: 0.05),
+                        color: isDark ? Colors.black.withValues(alpha: 0.2) : Colors.grey.withValues(alpha: 0.05),
                         blurRadius: 10,
                         offset: const Offset(0, 4),
                       ),
@@ -141,25 +144,26 @@ class _HistoryScreenState extends State<HistoryScreen> {
                               style: GoogleFonts.outfit(
                                 fontWeight: FontWeight.bold,
                                 fontSize: 16,
+                                color: isDark ? Colors.white : Colors.black87,
                               ),
                             ),
                             Text(
                               item['specialty'],
                               style: GoogleFonts.outfit(
-                                color: Colors.grey,
+                                color: isDark ? Colors.grey[400] : Colors.grey,
                                 fontSize: 13,
                               ),
                             ),
                             const SizedBox(height: 8),
                             Row(
                               children: [
-                                const Icon(Icons.calendar_today,
-                                    size: 14, color: Colors.grey),
+                                Icon(Icons.calendar_today,
+                                    size: 14, color: isDark ? Colors.grey[500] : Colors.grey),
                                 const SizedBox(width: 4),
                                 Text(
                                   item['date'],
                                   style: GoogleFonts.outfit(
-                                    color: Colors.grey,
+                                    color: isDark ? Colors.grey[400] : Colors.grey,
                                     fontSize: 12,
                                   ),
                                 ),
@@ -192,7 +196,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
     );
   }
 
-  Widget _buildEmptyState() {
+  Widget _buildEmptyState(bool isDark) {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -200,11 +204,11 @@ class _HistoryScreenState extends State<HistoryScreen> {
           Container(
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
-              color: Colors.grey[100],
+              color: isDark ? Colors.grey[800] : Colors.grey[100],
               shape: BoxShape.circle,
             ),
             child: Icon(Icons.history_toggle_off,
-                size: 64, color: Colors.grey[400]),
+                size: 64, color: isDark ? Colors.grey[600] : Colors.grey[400]),
           ),
           const SizedBox(height: 24),
           Text(
@@ -212,14 +216,14 @@ class _HistoryScreenState extends State<HistoryScreen> {
             style: GoogleFonts.outfit(
               fontSize: 20,
               fontWeight: FontWeight.bold,
-              color: Colors.black87,
+              color: isDark ? Colors.white : Colors.black87,
             ),
           ),
           const SizedBox(height: 8),
           Text(
             "You haven't had any appointments yet.",
             style: GoogleFonts.outfit(
-              color: Colors.grey,
+              color: isDark ? Colors.grey[400] : Colors.grey,
               fontSize: 16,
             ),
           ),

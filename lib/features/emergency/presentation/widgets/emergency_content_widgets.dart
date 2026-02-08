@@ -3,6 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:go_router/go_router.dart';
 import '../providers/emergency_contacts_provider.dart';
+import '../providers/sos_controller.dart';
+import '../../data/models/sos_event_model.dart';
+import '../pages/ambulance_tracking_screen.dart';
 
 // --- Emergency Contacts List ---
 
@@ -218,8 +221,8 @@ class HospitalTile extends StatelessWidget {
         trailing: FilledButton.icon(
           onPressed: () {},
           style: FilledButton.styleFrom(
-            backgroundColor: const Color(0xFFE0F7FA), // Light cyan/teal
-            foregroundColor: const Color(0xFF006064), // Darker cyan/teal
+            backgroundColor: const Color(0xFFECEFF1), // Light blueGrey
+            foregroundColor: const Color(0xFF455A64), // Darker blueGrey
             elevation: 0,
             padding: const EdgeInsets.symmetric(horizontal: 16),
           ),
@@ -233,11 +236,15 @@ class HospitalTile extends StatelessWidget {
 
 // --- Ambulance Tracking Card ---
 
-class AmbulanceTrackingWidget extends StatelessWidget {
+class AmbulanceTrackingWidget extends ConsumerWidget {
   const AmbulanceTrackingWidget({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final sosState = ref.watch(sosControllerProvider);
+    final currentEvent = sosState.currentEvent;
+    final hasActiveTracking = currentEvent != null && !currentEvent.isResolved;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -245,52 +252,125 @@ class AmbulanceTrackingWidget extends StatelessWidget {
             style:
                 GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.bold)),
         const SizedBox(height: 12),
-        Container(
-          height: 160,
-          width: double.infinity,
-          decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: Colors.grey.shade200),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.grey.withValues(alpha: 0.05),
-                  blurRadius: 10,
-                  offset: const Offset(0, 5),
-                )
-              ]),
-          clipBehavior: Clip.antiAlias,
-          child: Stack(
-            fit: StackFit.expand,
-            children: [
-              // Mock Map Background
-              Container(color: Colors.grey[100]),
-              Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.map_rounded,
-                        size: 48, color: Colors.grey.shade300),
-                    const SizedBox(height: 8),
-                    Text("Live tracking unavailable",
-                        style: GoogleFonts.outfit(color: Colors.grey)),
-                  ],
+        GestureDetector(
+          onTap: hasActiveTracking
+              ? () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => const AmbulanceTrackingScreen(),
+                    ),
+                  );
+                }
+              : null,
+          child: Container(
+            height: 160,
+            width: double.infinity,
+            decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: hasActiveTracking
+                      ? Colors.green.shade300
+                      : Colors.grey.shade200,
+                  width: hasActiveTracking ? 2 : 1,
                 ),
-              ),
-              // Overlay for aesthetics
-              Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [
-                      Colors.transparent,
-                      Colors.black.withValues(alpha: 0.03)
-                    ],
+                boxShadow: [
+                  BoxShadow(
+                    color: hasActiveTracking
+                        ? Colors.green.withValues(alpha: 0.1)
+                        : Colors.grey.withValues(alpha: 0.05),
+                    blurRadius: 10,
+                    offset: const Offset(0, 5),
+                  )
+                ]),
+            clipBehavior: Clip.antiAlias,
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                // Background
+                Container(
+                  color: hasActiveTracking
+                      ? Colors.green.shade50
+                      : Colors.grey[100],
+                ),
+                Center(
+                  child: hasActiveTracking
+                      ? Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: Colors.green.shade100,
+                                shape: BoxShape.circle,
+                              ),
+                              child: Icon(
+                                Icons.local_hospital_rounded,
+                                size: 32,
+                                color: Colors.green.shade700,
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            Text(
+                              "Ambulance ${currentEvent.assignedAmbulanceId ?? ''}",
+                              style: GoogleFonts.outfit(
+                                fontWeight: FontWeight.bold,
+                                color: Colors.green.shade700,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 12, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: Colors.green.shade600,
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Text(
+                                sosStatusToReadable(currentEvent.status),
+                                style: GoogleFonts.outfit(
+                                  fontSize: 12,
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              "Tap to view live tracking",
+                              style: GoogleFonts.outfit(
+                                fontSize: 12,
+                                color: Colors.green.shade600,
+                              ),
+                            ),
+                          ],
+                        )
+                      : Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.map_rounded,
+                                size: 48, color: Colors.grey.shade300),
+                            const SizedBox(height: 8),
+                            Text("Live tracking unavailable",
+                                style: GoogleFonts.outfit(color: Colors.grey)),
+                          ],
+                        ),
+                ),
+                // Overlay for aesthetics
+                Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        Colors.transparent,
+                        Colors.black.withValues(alpha: 0.03)
+                      ],
+                    ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ],

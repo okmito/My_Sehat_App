@@ -1,12 +1,38 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../../../settings/presentation/widgets/dpdp_consent_dialogs.dart';
 
-class DiagnosticsEntryScreen extends StatelessWidget {
+class DiagnosticsEntryScreen extends ConsumerWidget {
   const DiagnosticsEntryScreen({super.key});
 
+  Future<void> _startSymptomCheck(BuildContext context, WidgetRef ref) async {
+    // DPDP Compliance: Check consent before AI processing
+    final hasConsent =
+        await FeatureConsents.checkSymptomCheckerConsent(context, ref);
+    if (!hasConsent) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Symptom Checker requires consent for AI processing',
+              style: GoogleFonts.outfit(),
+            ),
+            backgroundColor: Colors.orange,
+          ),
+        );
+      }
+      return;
+    }
+
+    if (context.mounted) {
+      context.push('/diagnostics/chat');
+    }
+  }
+
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -56,7 +82,7 @@ class DiagnosticsEntryScreen extends StatelessWidget {
             ),
             const SizedBox(height: 48),
             ElevatedButton(
-              onPressed: () => context.push('/diagnostics/chat'),
+              onPressed: () => _startSymptomCheck(context, ref),
               style: ElevatedButton.styleFrom(
                 backgroundColor: Theme.of(context).primaryColor,
                 foregroundColor: Colors.white,

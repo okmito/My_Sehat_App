@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'add_medicine_page.dart';
+import '../settings/presentation/widgets/dpdp_consent_dialogs.dart';
 
 import 'providers/medicine_provider.dart';
 import 'models/medication.dart';
@@ -119,11 +120,15 @@ class _MedicineReminderPageState extends ConsumerState<MedicineReminderPage>
         ],
       ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => const AddMedicinePage()),
-          );
+        onPressed: () async {
+          // DPDP Compliance: Check consent before storing medication data
+          final hasConsent = await FeatureConsents.checkMedicineConsent(context, ref);
+          if (hasConsent && mounted) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const AddMedicinePage()),
+            );
+          }
         },
         icon: const Icon(Icons.add_rounded),
         label: Text("Add Medicine",

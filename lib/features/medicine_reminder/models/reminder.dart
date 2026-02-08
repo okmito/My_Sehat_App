@@ -19,15 +19,32 @@ class Reminder {
   });
 
   factory Reminder.fromJson(Map<String, dynamic> json) {
-    // Handling potential variations in backend response
+    // Parse scheduled_at to extract date and time
+    String dueTime = '';
+    String date = '';
+    
+    if (json['scheduled_at'] != null) {
+      try {
+        final scheduledAt = DateTime.parse(json['scheduled_at']);
+        dueTime = '${scheduledAt.hour.toString().padLeft(2, '0')}:${scheduledAt.minute.toString().padLeft(2, '0')}';
+        date = '${scheduledAt.year}-${scheduledAt.month.toString().padLeft(2, '0')}-${scheduledAt.day.toString().padLeft(2, '0')}';
+      } catch (e) {
+        dueTime = json['due_time'] ?? '';
+        date = json['date'] ?? '';
+      }
+    } else {
+      dueTime = json['due_time'] ?? '';
+      date = json['date'] ?? '';
+    }
+    
     return Reminder(
       id: json['id']?.toString() ?? '',
       medicationId: json['medication_id']?.toString() ?? '',
       medicationName: json['medication_name'] ?? 'Unknown Medicine',
-      strength: json['strength'],
-      dueTime: json['due_time'] ?? '',
+      strength: json['strength']?.toString(),
+      dueTime: dueTime,
       status: json['status'] ?? 'PENDING',
-      date: json['date'] ?? '',
+      date: date,
     );
   }
 }

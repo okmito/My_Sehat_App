@@ -84,7 +84,30 @@ class DiagnosticsNotifier extends StateNotifier<DiagnosticsState> {
   Future<void> Function()? _lastRetryableAction;
 
   DiagnosticsNotifier(this._apiService) : super(DiagnosticsState()) {
-    _loadUserId();
+    _initialize();
+  }
+
+  Future<void> _initialize() async {
+    await _loadUserId();
+    _addGreetingMessage();
+  }
+
+  void _addGreetingMessage() {
+    final greetingMessage = ChatMessage(
+      id: 'greeting',
+      text: "👋 Hello! I'm your AI Health Assistant.\n\n"
+          "I can help you understand your symptoms and guide you to the right care.\n\n"
+          "You can:\n"
+          "• Describe your symptoms in text\n"
+          "• Upload an image of a wound, rash, or skin condition\n\n"
+          "What's bothering you today?",
+      isUser: false,
+    );
+
+    state = DiagnosticsState(
+      userId: state.userId,
+      messages: [greetingMessage],
+    );
   }
 
   Future<void> _loadUserId() async {
@@ -102,12 +125,12 @@ class DiagnosticsNotifier extends StateNotifier<DiagnosticsState> {
   }
 
   void reset() {
-    // Keep userId, clear session
-    state = DiagnosticsState(userId: state.userId);
+    // Keep userId, clear session, add greeting
+    _addGreetingMessage();
   }
 
   void startNewSession() {
-    state = DiagnosticsState(userId: state.userId);
+    _addGreetingMessage();
   }
 
   Future<void> retry() async {
