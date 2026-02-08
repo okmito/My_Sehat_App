@@ -1,9 +1,4 @@
 from fastapi import FastAPI
-# Auto-create all tables on startup (Render-safe, no Alembic)
-@app.on_event("startup")
-def init_db():
-    if hasattr(db, "Base") and hasattr(db, "engine"):
-        db.Base.metadata.create_all(bind=db.engine)
 """
 Mental Health AI Backend - DPDP Act 2023 Compliant
 ===================================================

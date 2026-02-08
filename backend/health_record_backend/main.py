@@ -45,11 +45,6 @@ except ImportError:
     print("⚠️ DPDP module not available - running without central privacy compliance")
 
 
-# Auto-create all tables on startup (Render-safe, no Alembic)
-@app.on_event("startup")
-def init_db():
-    Base.metadata.create_all(bind=engine)
-
 app = FastAPI(
     title=settings.PROJECT_NAME + " - DPDP Compliant",
     description="""
@@ -78,6 +73,11 @@ app = FastAPI(
     version="1.1.0",
     openapi_url=f"{settings.API_V1_STR}/openapi.json"
 )
+
+# Auto-create all tables on startup (Render-safe, no Alembic)
+@app.on_event("startup")
+def init_db():
+    Base.metadata.create_all(bind=engine)
 
 # Store DPDP status in app state
 app.state.dpdp_available = DPDP_AVAILABLE

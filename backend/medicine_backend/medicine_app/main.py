@@ -38,12 +38,6 @@ except ImportError:
     DPDP_AVAILABLE = False
     print("⚠️ DPDP module not available - running without privacy compliance")
 
-
-# Auto-create all tables on startup (Render-safe, no Alembic)
-@app.on_event("startup")
-def init_db():
-    Base.metadata.create_all(bind=engine)
-
 app = FastAPI(
     title=settings.PROJECT_NAME + " - DPDP Compliant",
     description="""
@@ -55,6 +49,11 @@ app = FastAPI(
     - Full data export and deletion supported
     """
 )
+
+# Auto-create all tables on startup (Render-safe, no Alembic)
+@app.on_event("startup")
+def init_db():
+    Base.metadata.create_all(bind=engine)
 
 # Add DPDP Middleware and Consent APIs
 if DPDP_AVAILABLE:
