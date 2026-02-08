@@ -56,8 +56,19 @@ def init_db():
     """Initialize database tables on startup."""
     print("🔧 Initializing Medicine Backend database...", flush=True)
     
+    # Debug: Check what's in Base.metadata
+    print(f"DEBUG: Base class: {Base}", flush=True)
+    print(f"DEBUG: Base.metadata: {Base.metadata}", flush=True)
+    print(f"DEBUG: Base.metadata.tables keys: {list(Base.metadata.tables.keys())}", flush=True)
+    
+    # Try to access the model classes to ensure they're loaded
+    print(f"DEBUG: Medication class: {Medication}", flush=True)
+    print(f"DEBUG: Medication.__tablename__: {Medication.__tablename__}", flush=True)
+    print(f"DEBUG: Medication.__table__: {Medication.__table__}", flush=True)
+    
     # Create tables for all registered models
     try:
+        print(f"DEBUG: Calling Base.metadata.create_all(bind=engine)...", flush=True)
         Base.metadata.create_all(bind=engine)
         print(f"✓ Database tables created successfully at: {settings.DATABASE_URL}", flush=True)
         
@@ -65,12 +76,15 @@ def init_db():
         from sqlalchemy import inspect
         inspector = inspect(engine)
         tables = inspector.get_table_names()
-        print(f"✓ Available tables: {', '.join(tables)}", flush=True)
+        print(f"✓ Available tables in database: {', '.join(tables) if tables else 'NONE'}", flush=True)
         
         if not tables:
             print("❌ WARNING: No tables were created! Models may not be registered.", flush=True)
+            print(f"DEBUG: Checking Base.metadata.sorted_tables: {Base.metadata.sorted_tables}", flush=True)
     except Exception as e:
         print(f"❌ Failed to create database tables: {e}", flush=True)
+        import traceback
+        traceback.print_exc()
         raise
 
 # Initialize database immediately at module import time
