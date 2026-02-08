@@ -42,44 +42,45 @@ from contextlib import asynccontextmanager
 # Database initialization function
 def init_db():
     """Initialize database tables on startup."""
-    print("🔧 Initializing Medicine Backend database...")
+    print("🔧 Initializing Medicine Backend database...", flush=True)
     
     # Ensure all medicine models are imported and registered with `Base`
     try:
         from medicine_backend.medicine_app.models import Medication, MedicationSchedule, Prescription, DoseEvent  # noqa: F401
-        print("✓ Models imported successfully (package style)")
+        print("✓ Models imported successfully (package style)", flush=True)
     except Exception as e:
-        print(f"⚠️  Package import failed: {e}, trying local import...")
+        print(f"⚠️  Package import failed: {e}, trying local import...", flush=True)
         try:
             # Fallback to local package import style
             from models import Medication, MedicationSchedule, Prescription, DoseEvent  # noqa: F401
-            print("✓ Models imported successfully (local style)")
+            print("✓ Models imported successfully (local style)", flush=True)
         except Exception as e2:
-            print(f"❌ Failed to import models: {e2}")
+            print(f"❌ Failed to import models: {e2}", flush=True)
             raise
 
     # Create tables for all registered models
     try:
         Base.metadata.create_all(bind=engine)
-        print(f"✓ Database tables created successfully at: {settings.DATABASE_URL}")
+        print(f"✓ Database tables created successfully at: {settings.DATABASE_URL}", flush=True)
         
         # List all tables that were created
         from sqlalchemy import inspect
         inspector = inspect(engine)
         tables = inspector.get_table_names()
-        print(f"✓ Available tables: {', '.join(tables)}")
+        print(f"✓ Available tables: {', '.join(tables)}", flush=True)
     except Exception as e:
-        print(f"❌ Failed to create database tables: {e}")
+        print(f"❌ Failed to create database tables: {e}", flush=True)
         raise
 
-# Lifespan context manager for startup/shutdown
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    # Startup: Initialize database
-    init_db()
-    yield
-    # Shutdown: cleanup if needed
-    pass
+# Initialize database immediately at module import time
+# This ensures tables are created when uvicorn loads the module
+print("=" * 60, flush=True)
+print("MEDICINE BACKEND: Initializing at module import time", flush=True)
+print("=" * 60, flush=True)
+init_db()
+print("=" * 60, flush=True)
+print("MEDICINE BACKEND: Database initialization complete", flush=True)
+print("=" * 60, flush=True)
 
 app = FastAPI(
     title=settings.PROJECT_NAME + " - DPDP Compliant",
@@ -90,8 +91,7 @@ app = FastAPI(
     - Medication data under user control
     - Emergency access limited to current medications only
     - Full data export and deletion supported
-    """,
-    lifespan=lifespan  # Use lifespan instead of deprecated on_event
+    """
 )
 
 # Add DPDP Middleware and Consent APIs
