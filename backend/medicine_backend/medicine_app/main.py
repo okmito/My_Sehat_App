@@ -66,21 +66,22 @@ def init_db():
     print(f"DEBUG: Medication.__tablename__: {Medication.__tablename__}", flush=True)
     print(f"DEBUG: Medication.__table__: {Medication.__table__}", flush=True)
     
+    # CRITICAL FIX: Delete existing database file to avoid index conflicts
+    # Since /tmp is ephemeral on Render, this is safe and ensures clean state
+    import os
+    db_path = settings.DATABASE_URL.replace("sqlite:///", "")
+    if os.path.exists(db_path):
+        print(f"⚠️  Deleting existing database file: {db_path}", flush=True)
+        try:
+            os.remove(db_path)
+            print(f"✓ Old database file deleted", flush=True)
+        except Exception as e:
+            print(f"⚠️  Could not delete old database: {e}", flush=True)
+    
     # Create tables for all registered models
     try:
         print(f"DEBUG: Calling Base.metadata.create_all(bind=engine, checkfirst=True)...", flush=True)
-        # checkfirst=True makes SQLAlchemy check if tables exist before creating them
-        # However, it doesn't check indexes, so we need to handle "already exists" errors
-        try:
-            Base.metadata.create_all(bind=engine, checkfirst=True)
-        except Exception as create_err:
-            # SQLite doesn't support IF NOT EXISTS for indexes, so we get errors on restart
-            # This is OK - it means tables/indexes already exist from a previous run
-            if "already exists" in str(create_err).lower():
-                print(f"⚠️  Tables/indexes already exist (this is OK on restart): {str(create_err)[:100]}...", flush=True)
-            else:
-                # Re-raise if it's a different error
-                raise
+        Base.metadata.create_all(bind=engine, checkfirst=True)
         
         print(f"✓ Database initialization completed at: {settings.DATABASE_URL}", flush=True)
         
