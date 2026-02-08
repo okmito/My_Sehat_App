@@ -148,13 +148,27 @@ class ConsentEngine:
     """
     
     def __init__(self, db_url: str = None):
+        # Detect Render environment for database path
         if db_url is None:
-            # Use shared database for consent
-            db_path = os.path.join(os.path.dirname(__file__), "..", "..", "consent.db")
+            render_env = os.environ.get("RENDER", None)
+            if render_env or os.environ.get("PORT"):
+                # On Render, use /tmp for writable storage
+                db_path = "/tmp/consent.db"
+            else:
+                # Local development: Use shared database for consent
+                db_path = os.path.join(os.path.dirname(__file__), "..", "..", "consent.db")
             db_url = f"sqlite:///{db_path}"
         
         self.engine = create_engine(db_url, echo=False)
-        Base.metadata.create_all(self.engine, checkfirst=True)
+        
+        # Handle concurrent table creation (multiple backends starting simultaneously)
+        try:
+            Base.metadata.create_all(self.engine, checkfirst=True)
+        except Exception as e:
+            # Ignore "table already exists" errors from concurrent creation
+            if "already exists" not in str(e).lower():
+                print(f"⚠️  Warning: Consent engine initialization issue: {e}")
+        
         self.Session = sessionmaker(bind=self.engine)
     
     def grant_consent(self, consent: ConsentCreate) -> ConsentResponse:

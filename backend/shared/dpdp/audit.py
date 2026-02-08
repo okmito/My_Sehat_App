@@ -152,12 +152,27 @@ class AuditLogger:
     def __init__(self, db_url: str = None, service_name: str = "default"):
         self.service_name = service_name
         
+        # Detect Render environment for database path
         if db_url is None:
-            db_path = os.path.join(os.path.dirname(__file__), "..", "..", "audit.db")
+            render_env = os.environ.get("RENDER", None)
+            if render_env or os.environ.get("PORT"):
+                # On Render, use /tmp for writable storage
+                db_path = "/tmp/audit.db"
+            else:
+                # Local development
+                db_path = os.path.join(os.path.dirname(__file__), "..", "..", "audit.db")
             db_url = f"sqlite:///{db_path}"
         
         self.engine = create_engine(db_url, echo=False)
-        Base.metadata.create_all(self.engine, checkfirst=True)
+        
+        # Handle concurrent table creation (multiple backends starting simultaneously)
+        try:
+            Base.metadata.create_all(self.engine, checkfirst=True)
+        except Exception as e:
+            # Ignore "table already exists" errors from concurrent creation
+            if "already exists" not in str(e).lower():
+                print(f"⚠️  Warning: Audit logger initialization issue: {e}")
+        
         self.Session = sessionmaker(bind=self.engine)
     
     def log(self, entry: AuditLogEntry) -> int:
