@@ -80,7 +80,7 @@ def start_internal_service(service_key: str, config: dict) -> subprocess.Popen:
     module = config["module"]
     name = config["name"]
     
-    print(f"  Starting {name} on 127.0.0.1:{port}...")
+    print(f"  Starting {name} on 127.0.0.1:{port}...", flush=True)
     
     env = os.environ.copy()
     env["PYTHONPATH"] = str(BASE_DIR)
@@ -94,16 +94,19 @@ def start_internal_service(service_key: str, config: dict) -> subprocess.Popen:
     ]
     
     try:
-        # Don't pipe stdout/stderr - let errors be visible in console
+        # Don't pipe stdout/stderr - let output go to console for Render visibility
         process = subprocess.Popen(
             cmd,
             env=env,
             cwd=str(BASE_DIR),
+            stdout=None,  # Let stdout go to parent process
+            stderr=None   # Let stderr go to parent process
         )
         running_processes.append(process)
+        print(f"  ✓ {name} started (PID: {process.pid})", flush=True)
         return process
     except Exception as e:
-        print(f"  ❌ Failed to start {name}: {e}")
+        print(f"  ❌ Failed to start {name}: {e}", flush=True)
         return None
 
 
@@ -169,48 +172,48 @@ def main():
     signal.signal(signal.SIGINT, signal_handler)
     signal.signal(signal.SIGTERM, signal_handler)
     
-    print(f"\n{'='*60}")
-    print("MySehat Multi-Backend Orchestrator")
-    print("Render-Compatible Single-Port Architecture")
-    print(f"{'='*60}")
-    print(f"\nBase directory: {BASE_DIR}")
-    print(f"Public port: {os.environ.get('PORT', '8000')}")
-    print("\n[1/2] Starting internal services (localhost only)...\n")
+    print(f"\n{'='*60}", flush=True)
+    print("MySehat Multi-Backend Orchestrator", flush=True)
+    print("Render-Compatible Single-Port Architecture", flush=True)
+    print(f"{'='*60}", flush=True)
+    print(f"\nBase directory: {BASE_DIR}", flush=True)
+    print(f"Public port: {os.environ.get('PORT', '8000')}", flush=True)
+    print("\n[1/2] Starting internal services (localhost only)...\n", flush=True)
     
     # Start all internal services
     for service_key, config in INTERNAL_SERVICES.items():
         process = start_internal_service(service_key, config)
         if not process:
-            print(f"⚠️  {config['name']} failed to start - continuing anyway")
+            print(f"⚠️  {config['name']} failed to start - continuing anyway", flush=True)
     
     # Give services time to initialize
-    print("\n⏳ Waiting for internal services to initialize...")
-    time.sleep(3)
+    print("\n⏳ Waiting for internal services to initialize...", flush=True)
+    time.sleep(5)  # Increased from 3 to 5 seconds for Render
     
     # Start the gateway (public-facing)
-    print("\n[2/2] Starting public gateway...")
+    print("\n[2/2] Starting public gateway...", flush=True)
     gateway_process = start_gateway()
     
     if not gateway_process:
-        print("❌ Gateway failed to start!")
+        print("❌ Gateway failed to start!", flush=True)
         cleanup_processes()
         return
     
     gateway_port = os.environ.get("PORT", "8000")
     
-    print(f"\n{'='*60}")
-    print("✅ MySehat Backend Stack Started Successfully!")
-    print(f"{'='*60}")
-    print("\n📌 Service URLs:")
-    print(f"   Gateway (PUBLIC):  http://0.0.0.0:{gateway_port}")
-    print(f"   API Docs:          http://localhost:{gateway_port}/docs")
-    print(f"   Health Check:      http://localhost:{gateway_port}/health")
-    print("\n📌 Internal Services (localhost only):")
+    print(f"\n{'='*60}", flush=True)
+    print("✅ MySehat Backend Stack Started Successfully!", flush=True)
+    print(f"{'='*60}", flush=True)
+    print("\n📌 Service URLs:", flush=True)
+    print(f"   Gateway (PUBLIC):  http://0.0.0.0:{gateway_port}", flush=True)
+    print(f"   API Docs:          http://localhost:{gateway_port}/docs", flush=True)
+    print(f"   Health Check:      http://localhost:{gateway_port}/health", flush=True)
+    print("\n📌 Internal Services (localhost only):", flush=True)
     for key, config in INTERNAL_SERVICES.items():
-        print(f"   {config['name']:25} → 127.0.0.1:{config['port']}")
-    print(f"\n{'='*60}")
-    print("Press Ctrl+C to stop all services")
-    print(f"{'='*60}\n")
+        print(f"   {config['name']:25} → 127.0.0.1:{config['port']}", flush=True)
+    print(f"\n{'='*60}", flush=True)
+    print("Press Ctrl+C to stop all services", flush=True)
+    print(f"{'='*60}\n", flush=True)
     
     try:
         # Wait for gateway process

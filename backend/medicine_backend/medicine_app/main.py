@@ -126,6 +126,15 @@ def health():
         "dpdp_compliant": DPDP_AVAILABLE
     }
 
+@app.post("/admin/init-db")
+def manual_init_db():
+    """Manual database initialization endpoint - call this if tables aren't created"""
+    try:
+        init_db()
+        return {"status": "success", "message": "Database tables created successfully"}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+
 @app.get("/")
 def root():
     return {
