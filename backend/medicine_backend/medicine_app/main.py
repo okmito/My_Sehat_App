@@ -37,21 +37,9 @@ try:
 except ImportError:
     DPDP_AVAILABLE = False
     print("⚠️ DPDP module not available - running without privacy compliance")
+from contextlib import asynccontextmanager
 
-app = FastAPI(
-    title=settings.PROJECT_NAME + " - DPDP Compliant",
-    description="""
-    Medication reminder and tracking service.
-    
-    **DPDP Compliance:**
-    - Medication data under user control
-    - Emergency access limited to current medications only
-    - Full data export and deletion supported
-    """
-)
-
-# Auto-create all tables on startup (Render-safe, no Alembic)
-@app.on_event("startup")
+# Database initialization function
 def init_db():
     """Initialize database tables on startup."""
     print("🔧 Initializing Medicine Backend database...")
@@ -83,6 +71,28 @@ def init_db():
     except Exception as e:
         print(f"❌ Failed to create database tables: {e}")
         raise
+
+# Lifespan context manager for startup/shutdown
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup: Initialize database
+    init_db()
+    yield
+    # Shutdown: cleanup if needed
+    pass
+
+app = FastAPI(
+    title=settings.PROJECT_NAME + " - DPDP Compliant",
+    description="""
+    Medication reminder and tracking service.
+    
+    **DPDP Compliance:**
+    - Medication data under user control
+    - Emergency access limited to current medications only
+    - Full data export and deletion supported
+    """,
+    lifespan=lifespan  # Use lifespan instead of deprecated on_event
+)
 
 # Add DPDP Middleware and Consent APIs
 if DPDP_AVAILABLE:

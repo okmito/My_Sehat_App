@@ -44,46 +44,17 @@ except ImportError:
     DPDP_AVAILABLE = False
     print("⚠️ DPDP module not available - running without central privacy compliance")
 
+from contextlib import asynccontextmanager
 
-app = FastAPI(
-    title=settings.PROJECT_NAME + " - DPDP Compliant",
-    description="""
-    **DPDP Act 2023 Compliant** Health Record Service for MySehat App.
-    
-    ## Features
-    - Medical document OCR and analysis with AI
-    - Structured data extraction (medications, tests, diagnoses)
-    - Consent-aware storage with purpose-bound metadata
-    - Emergency-safe data extraction (minimal data for SOS)
-    - Timeline view and search
-    - Auto-delete for temporary storage
-    
-    ## DPDP Compliance
-    - **Consent-based storage**: Documents stored only with explicit consent
-    - **Storage options**: Permanent, Temporary (auto-delete), View-only
-    - **Right to Access**: Export all your health records
-    - **Right to Erasure**: Delete all records at any time
-    - **AI Transparency**: Clear disclaimers on AI-extracted data
-    - **Audit Trail**: All access is logged
-    
-    ## Privacy Notice
-    All extracted data is stored under user's control.
-    This service respects patient consent, data minimization, and explainability principles.
-    """,
-    version="1.1.0",
-    openapi_url=f"{settings.API_V1_STR}/openapi.json"
-)
-
-# Auto-create all tables on startup (Render-safe, no Alembic)
-@app.on_event("startup")
+# Database initialization function
 def init_db():
     """Initialize database tables on startup."""
     print("🔧 Initializing Health Records Backend database...")
     try:
         Base.metadata.create_all(bind=engine)
-        print("✓ Health Records database tables created successfully")
+        print(f"✓ Health Records database tables created successfully")
         
-        # List all tables that were created
+        # List all tables
         from sqlalchemy import inspect
         inspector = inspect(engine)
         tables = inspector.get_table_names()
@@ -91,6 +62,28 @@ def init_db():
     except Exception as e:
         print(f"❌ Failed to create Health Records database tables: {e}")
         raise
+
+# Lifespan context manager
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup
+    init_db()
+    yield
+    # Shutdown
+    pass
+
+app = FastAPI(
+    title="Health Records Backend - DPDP Compliant",
+    description="""
+    Medical record management and storage.
+    
+    **DPDP Compliance:**
+    - Health records under user control
+    - Emergency access with audit trail
+    - Full data export and deletion supported
+    """,
+    lifespan=lifespan
+)
 
 # Store DPDP status in app state
 app.state.dpdp_available = DPDP_AVAILABLE

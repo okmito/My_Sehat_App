@@ -37,31 +37,17 @@ try:
 except ImportError:
     DPDP_AVAILABLE = False
     print("⚠️ DPDP module not available - running without privacy compliance")
+from contextlib import asynccontextmanager
 
-app = FastAPI(
-    title=settings.PROJECT_NAME + " - DPDP Compliant",
-    description="""
-    AI-powered symptom checker with DPDP Act 2023 compliance.
-    
-    **Privacy Features:**
-    - Clear AI disclaimers
-    - Audit logging of all queries
-    - Data not used for training
-    - User consent verification
-    """,
-    openapi_url=f"{settings.API_V1_STR}/openapi.json"
-)
-
-# Auto-create all tables on startup (Render-safe, no Alembic)
-@app.on_event("startup")
+# Database initialization function
 def init_db():
     """Initialize database tables on startup."""
     print("🔧 Initializing Diagnostics Backend database...")
     try:
         Base.metadata.create_all(bind=engine)
-        print("✓ Diagnostics database tables created successfully")
+        print(f"✓ Diagnostics database tables created successfully")
         
-        # List all tables that were created
+        # List all tables
         from sqlalchemy import inspect
         inspector = inspect(engine)
         tables = inspector.get_table_names()
@@ -69,6 +55,28 @@ def init_db():
     except Exception as e:
         print(f"❌ Failed to create Diagnostics database tables: {e}")
         raise
+
+# Lifespan context manager
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup
+    init_db()
+    yield
+    # Shutdown
+    pass
+
+app = FastAPI(
+    title=settings.PROJECT_NAME + " - DPDP Compliant",
+    description="""
+    AI-powered diagnostic triage and symptom analysis.
+    
+    **DPDP Compliance:**
+    - Diagnostic data under user control
+    - AI processing with explicit consent
+    - Full data export and deletion supported
+    """,
+    lifespan=lifespan
+)
 
 # Add DPDP Middleware and Consent APIs
 if DPDP_AVAILABLE:
