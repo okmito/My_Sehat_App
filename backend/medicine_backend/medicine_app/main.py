@@ -68,15 +68,10 @@ def init_db():
     
     # Create tables for all registered models
     try:
-        print(f"DEBUG: Calling Base.metadata.create_all(bind=engine)...", flush=True)
-        try:
-            Base.metadata.create_all(bind=engine)
-        except Exception as create_err:
-            # Handle "already exists" errors gracefully (like DPDP modules)
-            if "already exists" in str(create_err).lower():
-                print(f"⚠️  Tables/indexes already exist (this is OK): {create_err}", flush=True)
-            else:
-                raise
+        print(f"DEBUG: Calling Base.metadata.create_all(bind=engine, checkfirst=True)...", flush=True)
+        # checkfirst=True makes SQLAlchemy check if tables exist before creating them
+        # This prevents "already exists" errors and creates only missing tables
+        Base.metadata.create_all(bind=engine, checkfirst=True)
         
         print(f"✓ Database tables created successfully at: {settings.DATABASE_URL}", flush=True)
         
