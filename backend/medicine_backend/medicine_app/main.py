@@ -53,15 +53,36 @@ app = FastAPI(
 # Auto-create all tables on startup (Render-safe, no Alembic)
 @app.on_event("startup")
 def init_db():
+    """Initialize database tables on startup."""
+    print("🔧 Initializing Medicine Backend database...")
+    
     # Ensure all medicine models are imported and registered with `Base`
     try:
         from medicine_backend.medicine_app.models import Medication, MedicationSchedule, Prescription, DoseEvent  # noqa: F401
-    except Exception:
-        # Fallback to local package import style
-        from models import Medication, MedicationSchedule, Prescription, DoseEvent  # noqa: F401
+        print("✓ Models imported successfully (package style)")
+    except Exception as e:
+        print(f"⚠️  Package import failed: {e}, trying local import...")
+        try:
+            # Fallback to local package import style
+            from models import Medication, MedicationSchedule, Prescription, DoseEvent  # noqa: F401
+            print("✓ Models imported successfully (local style)")
+        except Exception as e2:
+            print(f"❌ Failed to import models: {e2}")
+            raise
 
     # Create tables for all registered models
-    Base.metadata.create_all(bind=engine)
+    try:
+        Base.metadata.create_all(bind=engine)
+        print(f"✓ Database tables created successfully at: {settings.DATABASE_URL}")
+        
+        # List all tables that were created
+        from sqlalchemy import inspect
+        inspector = inspect(engine)
+        tables = inspector.get_table_names()
+        print(f"✓ Available tables: {', '.join(tables)}")
+    except Exception as e:
+        print(f"❌ Failed to create database tables: {e}")
+        raise
 
 # Add DPDP Middleware and Consent APIs
 if DPDP_AVAILABLE:

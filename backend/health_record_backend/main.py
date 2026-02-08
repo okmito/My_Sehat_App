@@ -77,7 +77,20 @@ app = FastAPI(
 # Auto-create all tables on startup (Render-safe, no Alembic)
 @app.on_event("startup")
 def init_db():
-    Base.metadata.create_all(bind=engine)
+    """Initialize database tables on startup."""
+    print("🔧 Initializing Health Records Backend database...")
+    try:
+        Base.metadata.create_all(bind=engine)
+        print("✓ Health Records database tables created successfully")
+        
+        # List all tables that were created
+        from sqlalchemy import inspect
+        inspector = inspect(engine)
+        tables = inspector.get_table_names()
+        print(f"✓ Available Health Records tables: {', '.join(tables)}")
+    except Exception as e:
+        print(f"❌ Failed to create Health Records database tables: {e}")
+        raise
 
 # Store DPDP status in app state
 app.state.dpdp_available = DPDP_AVAILABLE

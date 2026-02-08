@@ -2,8 +2,16 @@ import sqlite3
 from typing import List, Optional, Dict, Any
 import json
 from datetime import datetime
+import os
 
-DB_NAME = "app.db"
+# Detect Render environment and use appropriate database path
+render_env = os.environ.get("RENDER", None)
+if render_env or os.environ.get("PORT"):
+    # On Render, use /tmp for writable storage
+    DB_NAME = "/tmp/app.db"
+else:
+    # Local development
+    DB_NAME = "app.db"
 
 def get_db_connection():
     conn = sqlite3.connect(DB_NAME)
@@ -11,49 +19,58 @@ def get_db_connection():
     return conn
 
 def init_db():
-    conn = get_db_connection()
-    c = conn.cursor()
-    
-    # Messages table
-    c.execute('''
-        CREATE TABLE IF NOT EXISTS messages (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            user_id TEXT NOT NULL,
-            role TEXT NOT NULL,
-            text TEXT NOT NULL,
-            created_at TEXT NOT NULL
-        )
-    ''')
+    """Initialize database tables with error handling."""
+    print("🔧 Initializing Mental Health Backend database...")
+    try:
+        conn = get_db_connection()
+        c = conn.cursor()
+        
+        # Messages table
+        c.execute('''
+            CREATE TABLE IF NOT EXISTS messages (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id TEXT NOT NULL,
+                role TEXT NOT NULL,
+                text TEXT NOT NULL,
+                created_at TEXT NOT NULL
+            )
+        ''')
 
-    # Risk Events table
-    c.execute('''
-        CREATE TABLE IF NOT EXISTS risk_events (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            user_id TEXT NOT NULL,
-            message_id INTEGER,
-            risk_level TEXT NOT NULL,
-            self_harm_detected BOOLEAN NOT NULL,
-            keyword_score INTEGER,
-            reasons_json TEXT,
-            created_at TEXT NOT NULL,
-            FOREIGN KEY(message_id) REFERENCES messages(id)
-        )
-    ''')
+        # Risk Events table
+        c.execute('''
+            CREATE TABLE IF NOT EXISTS risk_events (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id TEXT NOT NULL,
+                message_id INTEGER,
+                risk_level TEXT NOT NULL,
+                self_harm_detected BOOLEAN NOT NULL,
+                keyword_score INTEGER,
+                reasons_json TEXT,
+                created_at TEXT NOT NULL,
+                FOREIGN KEY(message_id) REFERENCES messages(id)
+            )
+        ''')
 
-    # Daily Summary table
-    c.execute('''
-        CREATE TABLE IF NOT EXISTS daily_summaries (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            user_id TEXT NOT NULL,
-            date TEXT NOT NULL,
-            summary_text TEXT,
-            risk_level TEXT,
-            created_at TEXT NOT NULL
-        )
-    ''')
-    
-    conn.commit()
-    conn.close()
+        # Daily Summary table
+        c.execute('''
+            CREATE TABLE IF NOT EXISTS daily_summaries (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id TEXT NOT NULL,
+                date TEXT NOT NULL,
+                summary_text TEXT,
+                risk_level TEXT,
+                created_at TEXT NOT NULL
+            )
+        ''')
+        
+        conn.commit()
+        conn.close()
+        
+        print(f"✓ Mental Health database tables created successfully at: {DB_NAME}")
+        print("✓ Available Mental Health tables: messages, risk_events, daily_summaries")
+    except Exception as e:
+        print(f"❌ Failed to create Mental Health database tables: {e}")
+        raise
 
 # Helper functions for persistence
 
