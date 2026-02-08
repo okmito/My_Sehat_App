@@ -69,7 +69,15 @@ def init_db():
     # Create tables for all registered models
     try:
         print(f"DEBUG: Calling Base.metadata.create_all(bind=engine)...", flush=True)
-        Base.metadata.create_all(bind=engine)
+        try:
+            Base.metadata.create_all(bind=engine)
+        except Exception as create_err:
+            # Handle "already exists" errors gracefully (like DPDP modules)
+            if "already exists" in str(create_err).lower():
+                print(f"⚠️  Tables/indexes already exist (this is OK): {create_err}", flush=True)
+            else:
+                raise
+        
         print(f"✓ Database tables created successfully at: {settings.DATABASE_URL}", flush=True)
         
         # List all tables that were created
@@ -81,6 +89,8 @@ def init_db():
         if not tables:
             print("❌ WARNING: No tables were created! Models may not be registered.", flush=True)
             print(f"DEBUG: Checking Base.metadata.sorted_tables: {Base.metadata.sorted_tables}", flush=True)
+        else:
+            print(f"✅ SUCCESS: {len(tables)} tables are ready!", flush=True)
     except Exception as e:
         print(f"❌ Failed to create database tables: {e}", flush=True)
         import traceback
