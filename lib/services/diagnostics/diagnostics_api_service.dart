@@ -1,18 +1,15 @@
-import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../models/diagnostics/triage_models.dart';
+import '../../core/config/api_config.dart';
 
 class DiagnosticsApiService {
   late final Dio _dio;
 
   DiagnosticsApiService() {
-    // Diagnostics backend runs on port 8001
-    // Use 10.0.2.2 for Android emulator, localhost for others
-    final baseUrl = (!kIsWeb && Platform.isAndroid)
-        ? 'http://10.0.2.2:8001'
-        : 'http://127.0.0.1:8001';
+    // Use centralized API config for Render compatibility
+    final baseUrl = ApiConfig.diagnosticsUrl;
 
     _dio = Dio(
       BaseOptions(

@@ -1,17 +1,10 @@
-import 'dart:io';
 import 'package:dio/dio.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/ai_triage_response.dart';
+import '../../../../core/config/api_config.dart';
 
-// Mental Health backend runs on port 8003
-// Use 10.0.2.2 for Android emulator, localhost for others
-String get kAiMentalHealthBaseUrl {
-  if (!kIsWeb && Platform.isAndroid) {
-    return "http://10.0.2.2:8003";
-  }
-  return "http://127.0.0.1:8003";
-}
+// Use centralized API config for Render compatibility
+String get kAiMentalHealthBaseUrl => ApiConfig.mentalHealthUrl;
 
 final aiTriageServiceProvider = Provider<AiTriageService>((ref) {
   return AiTriageService(Dio(BaseOptions(

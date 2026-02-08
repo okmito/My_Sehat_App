@@ -185,7 +185,8 @@ async def proxy_request(
     if not target_url:
         raise HTTPException(status_code=502, detail=f"Unknown service: {target_service}")
     
-    # Build the target path (remove the gateway prefix)
+    # Strip the gateway prefix from the path before forwarding
+    # e.g., /medicine-reminder/reminders/today -> /reminders/today
     original_path = request.url.path
     if original_path.startswith(path_prefix):
         backend_path = original_path[len(path_prefix):] or "/"

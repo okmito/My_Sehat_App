@@ -29,7 +29,7 @@ from .auth import (
     invalidate_all_user_tokens, get_current_user, get_current_user_optional
 )
 
-router = APIRouter(prefix="/auth", tags=["Authentication"])
+router = APIRouter(tags=["Authentication"])
 
 
 # ==========================================

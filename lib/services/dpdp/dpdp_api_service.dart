@@ -1,9 +1,9 @@
 // DPDP Act 2023 Compliance API Service
 // Connects Flutter app to backend consent management endpoints
 
-import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
+import '../../core/config/api_config.dart';
 
 /// Data categories as defined by DPDP Act 2023
 enum DpdpDataCategory {
@@ -173,11 +173,8 @@ class DpdpApiService {
   late final Dio _dio;
 
   DpdpApiService() {
-    // Gateway runs on port 8000 - single point for DPDP endpoints
-    // Use 10.0.2.2 for Android emulator, localhost for others
-    final baseUrl = (!kIsWeb && Platform.isAndroid)
-        ? 'http://10.0.2.2:8000'
-        : 'http://127.0.0.1:8000';
+    // Use centralized API config for Render compatibility
+    final baseUrl = ApiConfig.dpdpUrl;
 
     _dio = Dio(
       BaseOptions(

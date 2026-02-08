@@ -34,7 +34,7 @@ class SOSRemoteDataSource {
     required double latitude,
     required double longitude,
   }) async {
-    final response = await _dio.get('/hospitals/nearby', queryParameters: {
+    final response = await _dio.get('/sos/hospitals/nearby', queryParameters: {
       'lat': latitude,
       'lon': longitude,
     });

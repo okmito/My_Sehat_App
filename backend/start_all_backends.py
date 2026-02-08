@@ -94,12 +94,11 @@ def start_internal_service(service_key: str, config: dict) -> subprocess.Popen:
     ]
     
     try:
+        # Don't pipe stdout/stderr - let errors be visible in console
         process = subprocess.Popen(
             cmd,
             env=env,
             cwd=str(BASE_DIR),
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE
         )
         running_processes.append(process)
         return process

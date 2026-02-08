@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import '../core/config/api_config.dart';
 
 /// Authentication API Service
 ///
@@ -10,9 +11,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 /// - Session validation
 /// - Persistent login token storage
 class AuthApiService {
-  // Backend URL - update for production
-  static const String baseUrl = 'http://10.0.2.2:8000'; // Android emulator
-  // static const String baseUrl = 'http://localhost:8000'; // iOS/Web
+  // Use centralized API config for Render compatibility
+  static String get baseUrl => ApiConfig.authUrl;
 
   static const String _tokenKey = 'mysehat_auth_token';
   static const String _userKey = 'mysehat_user_data';

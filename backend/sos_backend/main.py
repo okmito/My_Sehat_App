@@ -124,7 +124,7 @@ except ImportError:
 # DPDP COMPLIANT ENDPOINTS
 # ============================================================================
 
-@app.post("/sos/", response_model=SOSEvent)
+@app.post("/", response_model=SOSEvent)
 def create_sos(sos_input: SOSCreate, background_tasks: BackgroundTasks, session: Session = Depends(get_session)):
     """
     Create SOS emergency event.
@@ -194,7 +194,7 @@ def create_sos(sos_input: SOSCreate, background_tasks: BackgroundTasks, session:
     return sos_event
 
 
-@app.get("/sos/active", response_model=List[SOSEvent])
+@app.get("/active", response_model=List[SOSEvent])
 def get_active_sos_events(session: Session = Depends(get_session)):
     """
     Get all active SOS events (for hospital/responders).
@@ -217,7 +217,7 @@ def get_active_sos_events(session: Session = Depends(get_session)):
     return valid_events
 
 
-@app.get("/sos/{sos_id}", response_model=SOSEvent)
+@app.get("/{sos_id}", response_model=SOSEvent)
 def get_sos_status(sos_id: int, session: Session = Depends(get_session)):
     sos_event = session.get(SOSEvent, sos_id)
     if not sos_event:
@@ -363,7 +363,7 @@ def update_emergency_profile(
     return profile
 
 
-@app.get("/sos/{sos_id}/emergency-data", response_model=EmergencyDataResponse)
+@app.get("/{sos_id}/emergency-data", response_model=EmergencyDataResponse)
 def get_emergency_data_for_responders(
     sos_id: int,
     responder_id: str,
@@ -437,7 +437,7 @@ def get_emergency_data_for_responders(
     return response
 
 
-@app.get("/sos/user/{user_id}", response_model=List[SOSEvent])
+@app.get("/user/{user_id}", response_model=List[SOSEvent])
 def get_user_sos_history(user_id: str, session: Session = Depends(get_session)):
     """
     Get user's SOS history.
@@ -456,7 +456,7 @@ def get_user_sos_history(user_id: str, session: Session = Depends(get_session)):
     return results
 
 
-@app.delete("/sos/user/{user_id}/history")
+@app.delete("/user/{user_id}/history")
 def delete_user_sos_history(user_id: str, session: Session = Depends(get_session)):
     """
     Delete user's SOS history (Right to Erasure).

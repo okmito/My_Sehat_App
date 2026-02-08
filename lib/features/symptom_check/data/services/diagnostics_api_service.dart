@@ -1,22 +1,15 @@
 import 'dart:convert';
-import 'dart:io' show Platform;
-import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:shared_preferences/shared_preferences.dart'; // Add this to pubspec if not present
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
 import '../../domain/models/triage_models.dart';
+import '../../../../core/config/api_config.dart';
 
 class DiagnosticsApiService {
-  // Diagnostics backend runs on port 8001
-  // Use 10.0.2.2 for Android Emulator, localhost for others
-  static String get _baseUrl {
-    if (!kIsWeb && Platform.isAndroid) {
-      return 'http://10.0.2.2:8001/api/v1';
-    }
-    return 'http://127.0.0.1:8001/api/v1';
-  }
+  // Use centralized API config for Render compatibility
+  static String get _baseUrl => '${ApiConfig.diagnosticsUrl}/api/v1';
 
   static const String _userIdKey = 'diagnostics_user_id';
 

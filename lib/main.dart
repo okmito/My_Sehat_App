@@ -1,15 +1,22 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
 import 'core/theme/app_theme.dart';
 import 'core/router/app_router.dart';
 import 'core/services/local_storage_service.dart';
+import 'core/config/api_config.dart';
 import 'features/emergency/presentation/providers/emergency_contacts_provider.dart';
 import 'core/providers/language_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Print API configuration in debug mode
+  if (kDebugMode) {
+    ApiConfig.printConfig();
+  }
 
   final localStorage = LocalStorageService();
   await localStorage.init();

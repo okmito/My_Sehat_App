@@ -1,19 +1,13 @@
-import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
+import '../config/api_config.dart';
 
 class MedicineApiService {
   late final Dio _dio;
 
   MedicineApiService() {
-    // Detect if running on Android Emulator
-    // Note: In a real app, you might use a more robust config or env vars.
-    // 10.0.2.2 is special alias to your host loopback interface (127.0.0.1)
-    // on user development machine.
-    // Medicine backend runs on port 8002
-    final baseUrl = (!kIsWeb && Platform.isAndroid)
-        ? 'http://10.0.2.2:8002'
-        : 'http://127.0.0.1:8002';
+    // Use centralized API config for Render compatibility
+    final baseUrl = ApiConfig.medicineUrl;
 
     _dio = Dio(BaseOptions(
       baseUrl: baseUrl,

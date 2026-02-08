@@ -11,6 +11,7 @@ import 'dart:convert';
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../core/config/api_config.dart';
 
 // ============================================================================
 // FHIR DATA CATEGORIES (DPDP Act aligned)
@@ -171,11 +172,8 @@ class FhirConsentNotifier extends StateNotifier<FhirConsentState> {
   final Dio _dio;
   static const _storageKey = 'fhir_hospital_consents';
 
-  // Android emulator uses 10.0.2.2 to reach host machine's localhost
-  static String get _baseUrl {
-    // For Android emulator, use 10.0.2.2; for others use localhost
-    return 'http://10.0.2.2:8000';
-  }
+  // Use centralized API config for Render compatibility
+  static String get _baseUrl => ApiConfig.gatewayUrl;
 
   FhirConsentNotifier(this.userId)
       : _dio = Dio(BaseOptions(
@@ -238,8 +236,11 @@ class FhirConsentNotifier extends StateNotifier<FhirConsentState> {
           'data_category': 'health_records',
           'purpose': sosEventId != null ? 'emergency' : 'sharing',
           'granted_to': 'hospital',
-          'consent_text': 'FHIR Hospital: $hospitalId - Resources: ${resources.map((r) => r.fhirResource).join(", ")}',
-          'expires_in_days': expiresAfter != null ? (expiresAfter.inSeconds / 86400).ceil() : null,
+          'consent_text':
+              'FHIR Hospital: $hospitalId - Resources: ${resources.map((r) => r.fhirResource).join(", ")}',
+          'expires_in_days': expiresAfter != null
+              ? (expiresAfter.inSeconds / 86400).ceil()
+              : null,
         },
         options: Options(headers: {'X-User-ID': userId}),
       );

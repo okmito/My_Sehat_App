@@ -72,6 +72,7 @@ if DPDP_AVAILABLE:
 # Mount uploads directory for static access
 app.mount("/uploads", StaticFiles(directory=settings.UPLOAD_DIR), name="uploads")
 
+# Include routers
 app.include_router(medications.router)
 app.include_router(reminders.router)
 app.include_router(prescriptions.router)
