@@ -4,9 +4,13 @@ from sqlalchemy import Column, Integer, String, DateTime
 from datetime import datetime
 
 # Add parent directory to path
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
 
-from core.db import Base
+# Use package-style import to ensure same Base instance
+try:
+    from medicine_backend.medicine_app.core.db import Base
+except ImportError:
+    from core.db import Base
 
 class Prescription(Base):
     __tablename__ = "prescriptions"
