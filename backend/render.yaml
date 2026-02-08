@@ -1,0 +1,27 @@
+# MySehat Backend - Render Deployment Configuration
+# =================================================
+# This file configures Render to deploy the MySehat backend stack.
+#
+# IMPORTANT: Render only allows ONE public port per service.
+# The gateway binds to $PORT (public), all other services run on localhost.
+
+services:
+  - type: web
+    name: mysehat-gateway
+    env: python
+    region: oregon  # Change to your preferred region
+    plan: free
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: python start_all_backends.py
+    envVars:
+      - key: PYTHONPATH
+        value: /opt/render/project/src/backend
+      - key: GROQ_API_KEY
+        sync: false  # Set manually in Render dashboard
+      - key: JWT_SECRET_KEY
+        generateValue: true
+      - key: DATABASE_URL
+        value: sqlite:///./app.db
+    healthCheckPath: /health
+    autoDeploy: true

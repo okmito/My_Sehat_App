@@ -19,6 +19,7 @@ from .auth import (
     get_current_user, hash_password, verify_password
 )
 from .router import router as auth_router
+from .app import app_standalone
 
 __all__ = [
     'User', 'UserPreferences', 'UserConsent',
@@ -29,5 +30,6 @@ __all__ = [
     'get_db', 'init_db', 'seed_database',
     'create_access_token', 'verify_token',
     'get_current_user', 'hash_password', 'verify_password',
-    'auth_router'
+    'auth_router',
+    'app_standalone'
 ]

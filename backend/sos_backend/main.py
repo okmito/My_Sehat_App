@@ -78,6 +78,11 @@ def read_root():
         "dpdp_compliant": DPDP_AVAILABLE
     }
 
+@app.get("/health")
+def health_check():
+    """Health check endpoint for gateway monitoring"""
+    return {"status": "ok", "service": "sos_backend", "dpdp_compliant": DPDP_AVAILABLE}
+
 # Mock Service: Assign Ambulance
 def mock_assign_ambulance(sos_id: int, session: Session):
     # Simulate a delay or process finding an ambulance

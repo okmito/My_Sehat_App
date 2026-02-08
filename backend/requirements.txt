@@ -1,0 +1,42 @@
+# MySehat Backend - Unified Requirements for Render Deployment
+# ============================================================
+# This file contains all dependencies needed to run the entire
+# MySehat backend stack (gateway + all internal services).
+
+# Core FastAPI Framework
+fastapi>=0.104.0
+uvicorn[standard]>=0.24.0
+pydantic>=2.0.0
+pydantic-settings>=2.0.0
+
+# HTTP Client for Gateway Proxy
+httpx>=0.25.0
+
+# Database & ORM
+sqlalchemy>=2.0.0
+sqlmodel>=0.0.14
+
+# Authentication & Security
+python-jose[cryptography]>=3.3.0
+passlib[bcrypt]>=1.7.4
+cryptography>=41.0.0
+PyJWT>=2.8.0
+
+# Request Handling
+python-multipart>=0.0.6
+python-dotenv>=1.0.0
+
+# AI Services (Mental Health, Diagnostics)
+openai>=1.0.0
+groq>=0.4.0
+
+# PDF Processing (Health Records)
+pypdf>=4.0.0
+
+# Utilities
+jinja2>=3.1.0
+requests>=2.31.0
+pytz>=2023.3
+
+# Aiofiles for async file operations
+aiofiles>=23.2.0

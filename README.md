@@ -92,6 +92,112 @@ MySehat is a comprehensive, offline-first digital healthcare and diagnostics pla
 
 ---
 
+## 🌐 Render Deployment (Gateway Architecture)
+
+MySehat uses a gateway-based architecture where multiple internal services are orchestrated behind a single public endpoint, making it compatible with Render's single-port deployment model.
+
+### Architecture Overview
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    RENDER (Internet)                        │
+│                                                             │
+│  ┌─────────────────────────────────────────────────────┐   │
+│  │           Gateway (0.0.0.0:$PORT)                   │   │
+│  │              PUBLIC ENTRY POINT                      │   │
+│  └─────────────────┬───────────────────────────────────┘   │
+│                    │                                        │
+│    ┌───────────────┼───────────────────────────────────┐   │
+│    │               │ Internal Services (127.0.0.1)     │   │
+│    │               ▼                                    │   │
+│    │  ┌─────────┐ ┌─────────┐ ┌─────────┐ ┌─────────┐ │   │
+│    │  │Auth:8001│ │Diag:8002│ │Med:8003 │ │MH:8004  │ │   │
+│    │  └─────────┘ └─────────┘ └─────────┘ └─────────┘ │   │
+│    │  ┌─────────┐ ┌─────────┐ ┌─────────┐             │   │
+│    │  │SOS:8005 │ │FHIR:8006│ │HR:8007  │             │   │
+│    │  └─────────┘ └─────────┘ └─────────┘             │   │
+│    └────────────────────────────────────────────────────┘   │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### Why Gateway is the Only Exposed Service
+
+1. **Render Constraint**: Render free tier allows only ONE public port
+2. **Security**: Internal services are not directly accessible from the internet
+3. **Centralized Concerns**: Authentication, DPDP consent, and audit logging happen at gateway level
+4. **Simplified Client Integration**: Flutter app and Hospital website use a single base URL
+
+### Render-Safe Start Command
+
+```bash
+python start_all_backends.py
+```
+
+This command:
+1. Starts all internal services on `127.0.0.1:800X` (localhost only)
+2. Starts the gateway on `0.0.0.0:$PORT` (Render's assigned port)
+3. Gateway reverse-proxies all requests to internal services
+
+### Render Deployment Steps
+
+1. **Push to GitHub**:
+   ```bash
+   git add .
+   git commit -m "Render-ready gateway architecture"
+   git push origin main
+   ```
+
+2. **Create Render Web Service**:
+   - Go to [Render Dashboard](https://dashboard.render.com)
+   - Click "New +" → "Web Service"
+   - Connect your GitHub repository
+   - Configure:
+     - **Name**: `mysehat-gateway`
+     - **Root Directory**: `backend`
+     - **Environment**: `Python 3`
+     - **Build Command**: `pip install -r requirements.txt`
+     - **Start Command**: `python start_all_backends.py`
+
+3. **Set Environment Variables** (in Render dashboard):
+   ```
+   GROQ_API_KEY=your_groq_api_key
+   JWT_SECRET_KEY=your_secret_key
+   ```
+
+4. **Update Client Applications**:
+   - **Flutter App**: Update `API_BASE_URL` to `https://mysehat-gateway.onrender.com`
+   - **Hospital Website**: Update API base URL to the same gateway URL
+
+### Local Development
+
+Test locally before deploying:
+
+```bash
+cd backend
+pip install -r requirements.txt
+python start_all_backends.py
+```
+
+API will be available at:
+- Gateway: `http://localhost:8000`
+- Swagger Docs: `http://localhost:8000/docs`
+- Health Check: `http://localhost:8000/health`
+
+### API Routes (via Gateway)
+
+| Service | Gateway Route | Internal Port |
+|---------|--------------|---------------|
+| Auth | `/auth/*` | 127.0.0.1:8001 |
+| Diagnostics | `/diagnostics/*` | 127.0.0.1:8002 |
+| Medicine | `/medicine-reminder/*` | 127.0.0.1:8003 |
+| Mental Health | `/mental-health/*` | 127.0.0.1:8004 |
+| SOS Emergency | `/sos/*` | 127.0.0.1:8005 |
+| FHIR R4 | `/fhir/*` | 127.0.0.1:8006 |
+| Health Records | `/health-records/*` | 127.0.0.1:8007 |
+| DPDP Consent | `/api/v1/consent` | (Gateway) |
+
+---
+
 ## 🧪 Hackathon MVP Scope
 - Offline-first mobile app
 - SOS emergency flow
