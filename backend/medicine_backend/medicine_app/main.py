@@ -67,41 +67,46 @@ def init_db():
     
     # Create tables for all registered models
     try:
-        print(f"DEBUG: Calling Base.metadata.create_all(bind=engine, checkfirst=True)...", flush=True)
-        Base.metadata.create_all(bind=engine, checkfirst=True)
-        
-        print(f"✓ Database initialization completed at: {settings.DATABASE_URL}", flush=True)
-        
-        # List all tables that exist
+        print(f"DEBUG: Checking for existing tables...", flush=True)
         from sqlalchemy import inspect
         inspector = inspect(engine)
-        tables = inspector.get_table_names()
-        print(f"✓ Available tables in database: {', '.join(tables) if tables else 'NONE'}", flush=True)
+        existing_tables = set(inspector.get_table_names())
+        print(f"DEBUG: Existing tables: {existing_tables}", flush=True)
         
-        if not tables:
-            print("❌ WARNING: No tables found in database!", flush=True)
+        tables_to_create = []
+        for name, table in Base.metadata.tables.items():
+            if name not in existing_tables:
+                tables_to_create.append(table)
+                print(f"DEBUG: Table '{name}' is missing and will be created.", flush=True)
+            else:
+                print(f"DEBUG: Table '{name}' already exists. Skipping creation.", flush=True)
+        
+        if tables_to_create:
+            print(f"DEBUG: Calling Base.metadata.create_all for {len(tables_to_create)} tables...", flush=True)
+            Base.metadata.create_all(bind=engine, tables=tables_to_create)
+            print(f"✓ Successfully created tables: {[t.name for t in tables_to_create]}", flush=True)
+        else:
+            print("✓ All tables already exist. No creation needed.", flush=True)
+            
+        print(f"✓ Database initialization completed at: {settings.DATABASE_URL}", flush=True)
+        
+        # Verify final state
+        inspector = inspect(engine)
+        final_tables = inspector.get_table_names()
+        print(f"✓ Available tables in database: {', '.join(final_tables) if final_tables else 'NONE'}", flush=True)
+        
+        if not final_tables:
+            print("❌ WARNING: No tables found in database even after initialization!", flush=True)
             print(f"DEBUG: Base.metadata.tables: {list(Base.metadata.tables.keys())}", flush=True)
         else:
-            print(f"✅ SUCCESS: {len(tables)} tables are ready!", flush=True)
+            print(f"✅ SUCCESS: {len(final_tables)} tables are ready!", flush=True)
+            
     except Exception as e:
-        # Check if this is an "already exists" error (safe to ignore)
-        error_msg = str(e).lower()
-        if "already exists" in error_msg:
-            print(f"ℹ️  Database objects already exist (this is normal): {e}", flush=True)
-            # Verify tables exist
-            from sqlalchemy import inspect
-            inspector = inspect(engine)
-            tables = inspector.get_table_names()
-            if tables:
-                print(f"✓ Verified {len(tables)} existing tables: {', '.join(tables)}", flush=True)
-            else:
-                print("⚠️  Warning: 'already exists' error but no tables found!", flush=True)
-        else:
-            # This is a real error - log it but don't crash the service
-            print(f"⚠️  Database initialization encountered an error (continuing anyway): {e}", flush=True)
-            import traceback
-            traceback.print_exc()
-            # Don't raise - allow the service to start even if DB init has issues
+        # This is a real error - log it but don't crash the service
+        print(f"⚠️  Database initialization encountered an error: {e}", flush=True)
+        import traceback
+        traceback.print_exc()
+        # Don't raise - allow the service to start even if DB init has issues
 
 # Initialize database immediately at module import time
 # This ensures tables are created when uvicorn loads the module
