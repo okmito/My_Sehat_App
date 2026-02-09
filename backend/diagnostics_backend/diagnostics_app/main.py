@@ -40,21 +40,62 @@ except ImportError:
 from contextlib import asynccontextmanager
 
 # Database initialization function
-def init_db():
-    """Initialize database tables on startup."""
-    print("🔧 Initializing Diagnostics Backend database...")
+# CRITICAL: Import all models at module level so they register with Base.metadata
+# This MUST happen before init_db() is called
+try:
+    from diagnostics_backend.diagnostics_app.db.models import TriageSession, TriageMessage, TriageObservation, MediaAsset, TriageOutput
+    print("[OK] Models imported successfully (package style)", flush=True)
+except ImportError:
     try:
-        Base.metadata.create_all(bind=engine)
-        print(f"✓ Diagnostics database tables created successfully")
-        
-        # List all tables
+        from db.models import TriageSession, TriageMessage, TriageObservation, MediaAsset, TriageOutput
+        print("[OK] Models imported successfully (local style)", flush=True)
+    except Exception as e:
+        print(f"[WARN] Failed to import models: {e}", flush=True)
+
+# Database initialization function
+def init_db():
+    """Initialize database tables with robust error handling (Iterative Strategy)."""
+    print("🔧 Initializing Diagnostics Backend database...", flush=True)
+    try:
+        # Step 1: Inspect existing state
         from sqlalchemy import inspect
         inspector = inspect(engine)
-        tables = inspector.get_table_names()
-        print(f"✓ Available Diagnostics tables: {', '.join(tables)}")
+        existing_tables_start = set(inspector.get_table_names())
+        print(f"DEBUG: Existing tables before init: {existing_tables_start}", flush=True)
+
+        # Step 2: Iterative Table Creation (The "Tank" Strategy)
+        sorted_tables = Base.metadata.sorted_tables
+        for table in sorted_tables:
+            try:
+                print(f"DEBUG: Processing table '{table.name}'...", flush=True)
+                table.create(bind=engine, checkfirst=True)
+                print(f"[OK] Table '{table.name}' synced.", flush=True)
+            except Exception as e:
+                error_msg = str(e).lower()
+                if "index" in error_msg and "already exists" in error_msg:
+                    print(f"[INFO] Index conflict on '{table.name}' (Safe to ignore).", flush=True)
+                elif "already exists" in error_msg:
+                     print(f"[INFO] Table '{table.name}' already exists: {e}", flush=True)
+                else:
+                    print(f"[WARN] Failed to create table '{table.name}': {e}", flush=True)
+
+        # Step 3: Verify final state
+        inspector = inspect(engine)
+        final_tables = set(inspector.get_table_names())
+        print(f"[OK] Final table list: {final_tables}", flush=True)
+        
+        expected_tables = {t.name for t in Base.metadata.sorted_tables}
+        missing_tables = expected_tables - final_tables
+        
+        if missing_tables:
+            print(f"[ERR] CRITICAL: Missing tables after initialization: {missing_tables}", flush=True)
+        else:
+             print(f"[OK] SUCCESS: Diagnostics backend fully initialized with {len(final_tables)} tables.", flush=True)
+
     except Exception as e:
-        print(f"❌ Failed to create Diagnostics database tables: {e}")
-        raise
+        print(f"[WARN] Unexpected database initialization error: {e}", flush=True)
+        import traceback
+        traceback.print_exc()
 
 # Lifespan context manager
 @asynccontextmanager

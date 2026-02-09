@@ -5,13 +5,18 @@ from datetime import datetime
 from sqlalchemy import Column, String, Integer, DateTime, Text, JSON, ForeignKey, Boolean
 from sqlalchemy.orm import relationship
 
-# Add parent directory to path
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-
-from db.base import Base
+# Robust import for Base to prevent split metadata
+try:
+    from diagnostics_backend.diagnostics_app.db.base import Base
+except ImportError:
+    try:
+        from diagnostics_app.db.base import Base
+    except ImportError:
+        from db.base import Base
 
 class TriageSession(Base):
     __tablename__ = "triage_sessions"
+    __table_args__ = {'extend_existing': True}
 
     id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
     created_at = Column(DateTime, default=datetime.utcnow)
@@ -27,6 +32,7 @@ class TriageSession(Base):
 
 class TriageMessage(Base):
     __tablename__ = "triage_messages"
+    __table_args__ = {'extend_existing': True}
 
     id = Column(Integer, primary_key=True, index=True)
     session_id = Column(String, ForeignKey("triage_sessions.id"))
@@ -38,6 +44,7 @@ class TriageMessage(Base):
 
 class TriageObservation(Base):
     __tablename__ = "triage_observations"
+    __table_args__ = {'extend_existing': True}
 
     id = Column(Integer, primary_key=True, index=True)
     session_id = Column(String, ForeignKey("triage_sessions.id"))
@@ -49,6 +56,7 @@ class TriageObservation(Base):
 
 class MediaAsset(Base):
     __tablename__ = "media_assets"
+    __table_args__ = {'extend_existing': True}
 
     id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
     session_id = Column(String, ForeignKey("triage_sessions.id"))
@@ -61,6 +69,7 @@ class MediaAsset(Base):
 
 class TriageOutput(Base):
     __tablename__ = "triage_outputs"
+    __table_args__ = {'extend_existing': True}
 
     id = Column(Integer, primary_key=True, index=True)
     session_id = Column(String, ForeignKey("triage_sessions.id"))
