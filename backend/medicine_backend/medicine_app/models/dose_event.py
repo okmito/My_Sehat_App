@@ -6,10 +6,13 @@ from datetime import datetime
 # Add parent directory to path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
 
-# Use package-style import to ensure same Base instance
+# Use consistent package-style import to ensure same Base instance
+# This is crucial for metadata registration
 try:
     from medicine_backend.medicine_app.core.db import Base
 except ImportError:
+    # Fallback for local testing if needed, but prefer package import
+    # This path must match exactly what main.py uses
     from core.db import Base
 
 class DoseEvent(Base):

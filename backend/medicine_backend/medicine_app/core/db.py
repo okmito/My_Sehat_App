@@ -41,19 +41,7 @@ def get_db():
         db.close()
 
 
-# IMPORTANT: Import all models so they are registered with `Base` before
-# `Base.metadata.create_all()` is called by the application startup hook.
-# Try package-style import first, fall back to local imports used during
-# development or when running modules directly.
-try:
-    # When running as part of the package
-    from medicine_backend.medicine_app.models import Medication, MedicationSchedule, Prescription, DoseEvent  # noqa: F401
-except ImportError:
-    try:
-        # When running from the medicine_app folder directly
-        from models import Medication, MedicationSchedule, Prescription, DoseEvent  # noqa: F401
-    except ImportError:
-        # If models cannot be imported here, they will be imported elsewhere
-        # before any DB access. We intentionally raise ImportError to surface
-        # configuration problems rather than silently ignoring them.
-        raise
+# Models should import Base, not the other way around to avoid circular imports
+# and multiple Base instances.
+# The main application (main.py) is responsible for importing models 
+# to ensure they are registered with Base.metadata before create_all is called.
