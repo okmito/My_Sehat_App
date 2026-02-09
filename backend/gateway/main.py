@@ -249,43 +249,43 @@ async def proxy_request(
 # PROXY ROUTE HANDLERS
 # ==========================================
 
-@gateway_app.api_route("/auth/{path:path}", methods=["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"])
+@gateway_app.api_route("/auth/{path:path}", methods=["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"], operation_id="proxy_to_auth_service")
 async def proxy_auth(request: Request, path: str = ""):
     """Proxy requests to Auth Backend"""
     return await proxy_request(request, "auth", "/auth")
 
 
-@gateway_app.api_route("/diagnostics/{path:path}", methods=["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"])
+@gateway_app.api_route("/diagnostics/{path:path}", methods=["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"], operation_id="proxy_to_diagnostics_service")
 async def proxy_diagnostics(request: Request, path: str = ""):
     """Proxy requests to Diagnostics Backend"""
     return await proxy_request(request, "diagnostics", "/diagnostics")
 
 
-@gateway_app.api_route("/medicine-reminder/{path:path}", methods=["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"])
+@gateway_app.api_route("/medicine-reminder/{path:path}", methods=["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"], operation_id="proxy_to_medicine_service")
 async def proxy_medicine(request: Request, path: str = ""):
     """Proxy requests to Medicine Reminder Backend"""
     return await proxy_request(request, "medicine", "/medicine-reminder")
 
 
-@gateway_app.api_route("/mental-health/{path:path}", methods=["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"])
+@gateway_app.api_route("/mental-health/{path:path}", methods=["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"], operation_id="proxy_to_mental_health_service")
 async def proxy_mental_health(request: Request, path: str = ""):
     """Proxy requests to Mental Health Backend"""
     return await proxy_request(request, "mental-health", "/mental-health")
 
 
-@gateway_app.api_route("/sos/{path:path}", methods=["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"])
+@gateway_app.api_route("/sos/{path:path}", methods=["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"], operation_id="proxy_to_sos_service")
 async def proxy_sos(request: Request, path: str = ""):
     """Proxy requests to SOS Emergency Backend"""
     return await proxy_request(request, "sos", "/sos")
 
 
-@gateway_app.api_route("/fhir/{path:path}", methods=["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"])
+@gateway_app.api_route("/fhir/{path:path}", methods=["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"], operation_id="proxy_to_fhir_service")
 async def proxy_fhir(request: Request, path: str = ""):
     """Proxy requests to FHIR Backend"""
     return await proxy_request(request, "fhir", "/fhir")
 
 
-@gateway_app.api_route("/health-records/{path:path}", methods=["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"])
+@gateway_app.api_route("/health-records/{path:path}", methods=["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"], operation_id="proxy_to_health_records_service")
 async def proxy_health_records(request: Request, path: str = ""):
     """Proxy requests to Health Records Backend"""
     return await proxy_request(request, "health-records", "/health-records")

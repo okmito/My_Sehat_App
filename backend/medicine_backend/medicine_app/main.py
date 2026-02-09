@@ -51,7 +51,6 @@ except ImportError as e:
     from models import Medication, MedicationSchedule, Prescription, DoseEvent
     print("✓ Models imported successfully (local style)", flush=True)
 
-# Database initialization function
 def init_db():
     """Initialize database tables on startup."""
     print("🔧 Initializing Medicine Backend database...", flush=True)
@@ -65,18 +64,6 @@ def init_db():
     print(f"DEBUG: Medication class: {Medication}", flush=True)
     print(f"DEBUG: Medication.__tablename__: {Medication.__tablename__}", flush=True)
     print(f"DEBUG: Medication.__table__: {Medication.__table__}", flush=True)
-    
-    # CRITICAL FIX: Delete existing database file to avoid index conflicts
-    # Since /tmp is ephemeral on Render, this is safe and ensures clean state
-    import os
-    db_path = settings.DATABASE_URL.replace("sqlite:///", "")
-    if os.path.exists(db_path):
-        print(f"⚠️  Deleting existing database file: {db_path}", flush=True)
-        try:
-            os.remove(db_path)
-            print(f"✓ Old database file deleted", flush=True)
-        except Exception as e:
-            print(f"⚠️  Could not delete old database: {e}", flush=True)
     
     # Create tables for all registered models
     try:
@@ -97,11 +84,24 @@ def init_db():
         else:
             print(f"✅ SUCCESS: {len(tables)} tables are ready!", flush=True)
     except Exception as e:
-        # Don't crash the service - log the error and continue
-        print(f"⚠️  Database initialization had issues (continuing anyway): {e}", flush=True)
-        import traceback
-        traceback.print_exc()
-        # Don't raise - allow the service to start even if DB init has issues
+        # Check if this is an "already exists" error (safe to ignore)
+        error_msg = str(e).lower()
+        if "already exists" in error_msg:
+            print(f"ℹ️  Database objects already exist (this is normal): {e}", flush=True)
+            # Verify tables exist
+            from sqlalchemy import inspect
+            inspector = inspect(engine)
+            tables = inspector.get_table_names()
+            if tables:
+                print(f"✓ Verified {len(tables)} existing tables: {', '.join(tables)}", flush=True)
+            else:
+                print("⚠️  Warning: 'already exists' error but no tables found!", flush=True)
+        else:
+            # This is a real error - log it but don't crash the service
+            print(f"⚠️  Database initialization encountered an error (continuing anyway): {e}", flush=True)
+            import traceback
+            traceback.print_exc()
+            # Don't raise - allow the service to start even if DB init has issues
 
 # Initialize database immediately at module import time
 # This ensures tables are created when uvicorn loads the module
