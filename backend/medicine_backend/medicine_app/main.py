@@ -45,78 +45,90 @@ print("MEDICINE BACKEND: Importing models at module level", flush=True)
 print("=" * 60, flush=True)
 try:
     from medicine_backend.medicine_app.models import Medication, MedicationSchedule, Prescription, DoseEvent
-    print("✓ Models imported successfully (package style)", flush=True)
+    print("[OK] Models imported successfully (package style)", flush=True)
 except ImportError as e:
-    print(f"⚠️  Package import failed: {e}, trying local import...", flush=True)
+    print(f"[WARN] Package import failed: {e}, trying local import...", flush=True)
     from models import Medication, MedicationSchedule, Prescription, DoseEvent
-    print("✓ Models imported successfully (local style)", flush=True)
+    print("[OK] Models imported successfully (local style)", flush=True)
 
+from contextlib import asynccontextmanager
+
+# FORCE-SAFE: Database initialization function
+# Moved out of module scope to prevent double-execution and race conditions
 def init_db():
-    """Initialize database tables on startup."""
-    print("🔧 Initializing Medicine Backend database...", flush=True)
+    """
+    Initialize database tables with robust error handling.
     
-    # Debug: Check what's in Base.metadata
-    print(f"DEBUG: Base class: {Base}", flush=True)
-    print(f"DEBUG: Base.metadata: {Base.metadata}", flush=True)
-    print(f"DEBUG: Base.metadata.tables keys: {list(Base.metadata.tables.keys())}", flush=True)
+    Strategy:
+    1. Inspect current DB state.
+    2. Attempt `create_all` with `checkfirst=True`.
+    3. Catch "already exists" errors specifically and verify tables exist.
+    """
+    print("=" * 60, flush=True)
+    print("MEDICINE BACKEND: Force-Safe Database Initialization", flush=True)
+    print("=" * 60, flush=True)
     
-    # Try to access the model classes to ensure they're loaded
-    print(f"DEBUG: Medication class: {Medication}", flush=True)
-    print(f"DEBUG: Medication.__tablename__: {Medication.__tablename__}", flush=True)
-    print(f"DEBUG: Medication.__table__: {Medication.__table__}", flush=True)
-    
-    # Create tables for all registered models
     try:
-        print(f"DEBUG: Checking for existing tables...", flush=True)
+        # Step 1: Inspect existing state
         from sqlalchemy import inspect
         inspector = inspect(engine)
         existing_tables = set(inspector.get_table_names())
-        print(f"DEBUG: Existing tables: {existing_tables}", flush=True)
+        print(f"DEBUG: Existing tables before init: {existing_tables}", flush=True)
         
-        tables_to_create = []
-        for name, table in Base.metadata.tables.items():
-            if name not in existing_tables:
-                tables_to_create.append(table)
-                print(f"DEBUG: Table '{name}' is missing and will be created.", flush=True)
-            else:
-                print(f"DEBUG: Table '{name}' already exists. Skipping creation.", flush=True)
+        # Step 2: Attempt creation using SQLAlchemy's checkfirst logic
+        # With our new naming convention in core/db.py, this should be reliable.
+        print("DEBUG: Executing Base.metadata.create_all()...", flush=True)
+        Base.metadata.create_all(bind=engine, checkfirst=True)
+        print("[OK] Schema synchronization complete.", flush=True)
         
-        if tables_to_create:
-            print(f"DEBUG: Calling Base.metadata.create_all for {len(tables_to_create)} tables...", flush=True)
-            Base.metadata.create_all(bind=engine, tables=tables_to_create)
-            print(f"✓ Successfully created tables: {[t.name for t in tables_to_create]}", flush=True)
-        else:
-            print("✓ All tables already exist. No creation needed.", flush=True)
-            
-        print(f"✓ Database initialization completed at: {settings.DATABASE_URL}", flush=True)
-        
-        # Verify final state
-        inspector = inspect(engine)
-        final_tables = inspector.get_table_names()
-        print(f"✓ Available tables in database: {', '.join(final_tables) if final_tables else 'NONE'}", flush=True)
+        # Step 3: Verify final state
+        final_tables = set(inspect(engine).get_table_names())
+        print(f"[OK] Final table list: {final_tables}", flush=True)
         
         if not final_tables:
-            print("❌ WARNING: No tables found in database even after initialization!", flush=True)
-            print(f"DEBUG: Base.metadata.tables: {list(Base.metadata.tables.keys())}", flush=True)
+            print("[ERR] CRITICAL: No tables found after initialization!", flush=True)
+            # FORCE-SAFE: Attempt explicit creation if checkfirst failed silently (rare but possible)
+            print("[WARN] Attempting forced creation of missing tables...", flush=True)
+            Base.metadata.create_all(bind=engine)
+            print("[OK] Forced creation complete.", flush=True)
         else:
-            print(f"✅ SUCCESS: {len(final_tables)} tables are ready!", flush=True)
-            
-    except Exception as e:
-        # This is a real error - log it but don't crash the service
-        print(f"⚠️  Database initialization encountered an error: {e}", flush=True)
-        import traceback
-        traceback.print_exc()
-        # Don't raise - allow the service to start even if DB init has issues
+            print(f"[OK] SUCCESS: medicine_backend ready with {len(final_tables)} tables.", flush=True)
 
-# Initialize database immediately at module import time
-# This ensures tables are created when uvicorn loads the module
-print("=" * 60, flush=True)
-print("MEDICINE BACKEND: Initializing at module import time", flush=True)
-print("=" * 60, flush=True)
-init_db()
-print("=" * 60, flush=True)
-print("MEDICINE BACKEND: Database initialization complete", flush=True)
-print("=" * 60, flush=True)
+    except Exception as e:
+        error_msg = str(e).lower()
+        # FORCE-SAFE: If index already exists, it means the schema is effectively synced.
+        # We ignore this specific error to ensure startup continuity.
+        if "index" in error_msg and "already exists" in error_msg:
+            print(f"[INFO] Index conflict detected (Safe to ignore as schema exists): {e}", flush=True)
+            # Double check tables exist
+            final_tables = set(inspect(engine).get_table_names())
+            if final_tables:
+                print(f"[OK] Verified tables exist: {final_tables}. Continuing startup.", flush=True)
+            else:
+                 print("[ERR] ERROR: Index exists but tables missing? This indicates corrupt DB state.", flush=True)
+        else:
+            print(f"[WARN] Database initialization error: {e}", flush=True)
+            # We explicitly allow startup to continue even on DB error to avoid crash-loop
+            import traceback
+            traceback.print_exc()
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup: Initialize Database
+    print("[INFO] Medicine Backend: Starting up...", flush=True)
+    init_db()
+    
+    # Store DPDP components in state if available
+    if DPDP_AVAILABLE:
+        app.state.dpdp_available = True
+        app.state.audit_logger = get_audit_logger("medicine_backend")
+        app.state.consent_engine = get_consent_engine()
+    else:
+        app.state.dpdp_available = False
+        
+    yield
+    # Shutdown logic (if any)
+    print("[INFO] Medicine Backend: Shutting down...", flush=True)
 
 app = FastAPI(
     title=settings.PROJECT_NAME + " - DPDP Compliant",
@@ -127,7 +139,8 @@ app = FastAPI(
     - Medication data under user control
     - Emergency access limited to current medications only
     - Full data export and deletion supported
-    """
+    """,
+    lifespan=lifespan  # Register lifespan handler
 )
 
 # Add DPDP Middleware and Consent APIs
