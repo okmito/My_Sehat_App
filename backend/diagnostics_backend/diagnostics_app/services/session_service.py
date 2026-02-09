@@ -3,11 +3,12 @@ from pathlib import Path
 from sqlalchemy.orm import Session
 from typing import Optional
 
-# Add parent directory to path
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+# Add backend directory to path (Enforce package imports)
+# Path: .../backend
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent.parent))
 
-from db.models import TriageSession, TriageMessage, TriageObservation
-from models.schemas import SessionCreate, MessageCreate
+from diagnostics_backend.diagnostics_app.db.models import TriageSession, TriageMessage, TriageObservation
+from diagnostics_backend.diagnostics_app.models.schemas import SessionCreate, MessageCreate
 
 class SessionService:
     def __init__(self, db: Session):

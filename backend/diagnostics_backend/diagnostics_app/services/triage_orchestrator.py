@@ -4,14 +4,15 @@ from typing import Dict, Any, Optional
 from sqlalchemy.orm import Session
 
 # Add parent directory to path
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+# Add backend directory to path
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent.parent))
 
 from services.vision_service import VisionService
 from services.reasoning_service import ReasoningService, CONFIRMATION_QUESTION, GENERAL_QUESTIONS
 from services.safety_service import SafetyService
 from services.session_service import SessionService
-from models.schemas import SessionCreate, MessageCreate, TriageResponse, Question, TriageOutputSchema
-from db.models import TriageSession
+from diagnostics_backend.diagnostics_app.models.schemas import SessionCreate, MessageCreate, TriageResponse, Question, TriageOutputSchema
+from diagnostics_backend.diagnostics_app.db.models import TriageSession
 
 class TriageOrchestrator:
     def __init__(self, db: Session):
