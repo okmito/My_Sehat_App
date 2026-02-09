@@ -72,45 +72,45 @@ def init_db():
         # Step 1: Inspect existing state
         from sqlalchemy import inspect
         inspector = inspect(engine)
-        existing_tables = set(inspector.get_table_names())
-        print(f"DEBUG: Existing tables before init: {existing_tables}", flush=True)
+        existing_tables_start = set(inspector.get_table_names())
+        print(f"DEBUG: Existing tables before init: {existing_tables_start}", flush=True)
         
-        # Step 2: Attempt creation using SQLAlchemy's checkfirst logic
-        # With our new naming convention in core/db.py, this should be reliable.
-        print("DEBUG: Executing Base.metadata.create_all()...", flush=True)
-        Base.metadata.create_all(bind=engine, checkfirst=True)
-        print("[OK] Schema synchronization complete.", flush=True)
+        # Step 2: Iterative Table Creation (The "Tank" Strategy)
+        # Instead of create_all() which stops on the first error, we handle each table individually.
+        print("DEBUG: Executing iterative table creation...", flush=True)
+        
+        sorted_tables = Base.metadata.sorted_tables
+        for table in sorted_tables:
+            try:
+                print(f"DEBUG: Processing table '{table.name}'...", flush=True)
+                table.create(bind=engine, checkfirst=True)
+                print(f"[OK] Table '{table.name}' synced.", flush=True)
+            except Exception as e:
+                error_msg = str(e).lower()
+                if "index" in error_msg and "already exists" in error_msg:
+                    print(f"[INFO] Index conflict on '{table.name}' (Safe to ignore): {e}", flush=True)
+                elif "already exists" in error_msg:
+                     print(f"[INFO] Table '{table.name}' already exists: {e}", flush=True)
+                else:
+                    print(f"[WARN] Failed to create table '{table.name}': {e}", flush=True)
         
         # Step 3: Verify final state
-        final_tables = set(inspect(engine).get_table_names())
+        inspector = inspect(engine)
+        final_tables = set(inspector.get_table_names())
         print(f"[OK] Final table list: {final_tables}", flush=True)
         
-        if not final_tables:
-            print("[ERR] CRITICAL: No tables found after initialization!", flush=True)
-            # FORCE-SAFE: Attempt explicit creation if checkfirst failed silently (rare but possible)
-            print("[WARN] Attempting forced creation of missing tables...", flush=True)
-            Base.metadata.create_all(bind=engine)
-            print("[OK] Forced creation complete.", flush=True)
+        expected_tables = {t.name for t in Base.metadata.sorted_tables}
+        missing_tables = expected_tables - final_tables
+        
+        if missing_tables:
+            print(f"[ERR] CRITICAL: Missing tables after initialization: {missing_tables}", flush=True)
         else:
-            print(f"[OK] SUCCESS: medicine_backend ready with {len(final_tables)} tables.", flush=True)
+            print(f"[OK] SUCCESS: Medicine backend fully initialized with {len(final_tables)} tables.", flush=True)
 
     except Exception as e:
-        error_msg = str(e).lower()
-        # FORCE-SAFE: If index already exists, it means the schema is effectively synced.
-        # We ignore this specific error to ensure startup continuity.
-        if "index" in error_msg and "already exists" in error_msg:
-            print(f"[INFO] Index conflict detected (Safe to ignore as schema exists): {e}", flush=True)
-            # Double check tables exist
-            final_tables = set(inspect(engine).get_table_names())
-            if final_tables:
-                print(f"[OK] Verified tables exist: {final_tables}. Continuing startup.", flush=True)
-            else:
-                 print("[ERR] ERROR: Index exists but tables missing? This indicates corrupt DB state.", flush=True)
-        else:
-            print(f"[WARN] Database initialization error: {e}", flush=True)
-            # We explicitly allow startup to continue even on DB error to avoid crash-loop
-            import traceback
-            traceback.print_exc()
+        print(f"[WARN] Unexpected database initialization error: {e}", flush=True)
+        import traceback
+        traceback.print_exc()
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
