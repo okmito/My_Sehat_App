@@ -12,24 +12,22 @@ sys.path.insert(0, str(BASE_DIR))
 # --- Import Service Routers/Apps ---
 # We import the Apps/Routers to mount them.
 # Using 'mount' allows them to keep their internal configuration.
-try:
-    from auth_backend.app import app_standalone as auth_app
-    from diagnostics_backend.diagnostics_app.main import app as diagnostics_app
-    from diagnostics_backend.diagnostics_app.main import init_db as init_diagnostics_db
-    from mental_health_backend.mental_health_app.main_dpdp import app as mental_health_app
-    from mental_health_backend.mental_health_app import db as mental_health_db
-    from medicine_backend.medicine_app.main import app as medicine_app
-    from medicine_backend.medicine_app.main import init_db as init_medicine_db
-    from sos_backend.main import app as sos_app
-    from sos_backend.database import create_db_and_tables as init_sos_db
-    from fhir_backend.main import fhir_app
-    from health_record_backend.main import app as health_records_app
-    from health_record_backend.main import init_db as init_health_records_db
-    # Gateway is replaced by this main app
-except ImportError as e:
-    print(f"CRITICAL: Failed to import a backend service: {e}")
-    # In production, we might want to continue with partial services, but for now lets fail hard
-    # so we know what's broken.
+# --- Import Service Routers/Apps ---
+# We import the Apps/Routers to mount them.
+# Using 'mount' allows them to keep their internal configuration.
+from auth_backend.app import app_standalone as auth_app
+from diagnostics_backend.diagnostics_app.main import app as diagnostics_app
+from diagnostics_backend.diagnostics_app.main import init_db as init_diagnostics_db
+from mental_health_backend.mental_health_app.main_dpdp import app as mental_health_app
+from mental_health_backend.mental_health_app import db as mental_health_db
+from medicine_backend.medicine_app.main import app as medicine_app
+from medicine_backend.medicine_app.main import init_db as init_medicine_db
+from sos_backend.main import app as sos_app
+from sos_backend.database import create_db_and_tables as init_sos_db
+from fhir_backend.main import fhir_app
+from health_record_backend.main import app as health_records_app
+from health_record_backend.main import init_db as init_health_records_db
+# Gateway is replaced by this main app
 
 # --- Global Startup/Lifespan ---
 @asynccontextmanager
