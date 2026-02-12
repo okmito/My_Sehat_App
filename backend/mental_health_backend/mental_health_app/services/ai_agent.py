@@ -10,18 +10,18 @@ env_path = Path(__file__).resolve().parent.parent.parent.parent / ".env"
 load_dotenv(env_path)
 
 try:
-    from groq import Groq
+    from groq import AsyncGroq
     api_key = os.getenv("GROQ_API_KEY")
     if api_key:
-        client = Groq(api_key=api_key)
+        client = AsyncGroq(api_key=api_key)
         USE_GROQ = True
     else:
         raise ValueError("GROQ_API_KEY not found")
 except (ImportError, ValueError) as e:
     print(f"Groq setup error: {e}")
     try:
-        from openai import OpenAI
-        client = OpenAI(api_key=os.getenv("GROQ_API_KEY"))
+        from openai import AsyncOpenAI
+        client = AsyncOpenAI(api_key=os.getenv("GROQ_API_KEY"))
         USE_GROQ = False
     except ImportError:
         # Fallback: Mock client for development
@@ -202,7 +202,7 @@ def build_fallback_response(user_msg: str) -> Dict[str, Any]:
         "advice": random.choice(FALLBACK_ADVICE)
     }
 
-def analyze_message_llm(user_message: str, conversation_history: List[Dict[str, str]] = None) -> Dict[str, Any]:
+async def analyze_message_llm(user_message: str, conversation_history: List[Dict[str, str]] = None) -> Dict[str, Any]:
     if not os.getenv("GROQ_API_KEY"):
         print("WARNING: GROQ_API_KEY not set, returning fallback")
         return build_fallback_response(user_message)
@@ -220,7 +220,7 @@ def analyze_message_llm(user_message: str, conversation_history: List[Dict[str, 
         # Add current message with JSON reminder
         messages.append({"role": "user", "content": f"{user_message}\n\n[Remember: respond ONLY with valid JSON, no other text]"})
         
-        completion = client.chat.completions.create(
+        completion = await client.chat.completions.create(
             model="llama-3.3-70b-versatile",
             messages=messages,
             temperature=0.75,  # Slightly lower for more reliable JSON
@@ -235,7 +235,7 @@ def analyze_message_llm(user_message: str, conversation_history: List[Dict[str, 
         print(f"LLM ERROR: {e}")
         return build_fallback_response(user_message)
 
-def summarize_day_llm(answers: Dict[str, str]) -> Dict[str, Any]:
+async def summarize_day_llm(answers: Dict[str, str]) -> Dict[str, Any]:
     """
     Summarize daily check-in answers.
     """
@@ -256,7 +256,7 @@ def summarize_day_llm(answers: Dict[str, str]) -> Dict[str, Any]:
     """
     
     try:
-        completion = client.chat.completions.create(
+        completion = await client.chat.completions.create(
             model="llama-3.1-8b-instant",
             messages=[
                 {"role": "system", "content": "You are a compassionate mental health assistant."},

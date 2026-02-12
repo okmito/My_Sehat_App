@@ -20,6 +20,7 @@ from datetime import datetime
 import json
 import os
 import sys
+import asyncio
 
 # Add parent directory to path for imports
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -369,7 +370,12 @@ class DPDPConsentMiddleware(BaseHTTPMiddleware):
                 granted_to=GrantedTo.SELF
             )
             
-            result = self.consent_engine.check_consent(consent_check)
+            
+            # Offload blocking DB call to thread
+            result = await asyncio.to_thread(
+                self.consent_engine.check_consent,
+                consent_check
+            )
             
             if not result.is_valid:
                 await self._log_access(
@@ -465,7 +471,10 @@ class DPDPConsentMiddleware(BaseHTTPMiddleware):
                 error_message=error,
             )
             
-            self.audit_logger.log(entry)
+            
+            # Offload blocking DB call to thread
+            # self.audit_logger.log(entry)
+            await asyncio.to_thread(self.audit_logger.log, entry)
         except Exception as e:
             # Don't fail request if logging fails, but print error
             print(f"[DPDP] Audit log error: {e}")

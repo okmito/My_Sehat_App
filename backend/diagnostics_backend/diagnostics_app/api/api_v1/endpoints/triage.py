@@ -172,15 +172,30 @@ async def triage_image(
             detail=f"Invalid file type. Allowed: {', '.join(allowed_types)}"
         )
     
-    # Read image bytes
-    image_bytes = await file.read()
+    # Process image using memory-efficient utility (runs in threadpool)
+    from fastapi.concurrency import run_in_threadpool
+    from shared.image_utils import process_image_upload, validate_and_read_upload
+    import io
+    import gc
     
-    # Check file size (5MB limit)
-    if len(image_bytes) > 5 * 1024 * 1024:
-        raise HTTPException(
-            status_code=400,
-            detail="Image size exceeds 5MB limit."
-        )
+    try:
+        # validate size first
+        if file.size and file.size > 5 * 1024 * 1024:
+             raise HTTPException(status_code=400, detail="Image size exceeds 5MB limit.")
+        
+        # Read file safely
+        raw_bytes = await validate_and_read_upload(file)
+        
+        # Optimize image (resize/compress) in threadpool to avoid blocking event loop
+        # Wrap bytes in BytesIO for PIL
+        image_bytes = await run_in_threadpool(process_image_upload, io.BytesIO(raw_bytes))
+        
+        # Explicitly clear raw bytes
+        del raw_bytes
+        gc.collect()
+        
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Image processing failed: {str(e)}")
     
     orchestrator = TriageOrchestrator(db)
     
