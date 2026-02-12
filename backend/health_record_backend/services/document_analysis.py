@@ -66,11 +66,7 @@ class DocumentAnalysisService:
             # Try to extract text directly from PDF
             pdf_reader = pypdf.PdfReader(io.BytesIO(pdf_bytes))
             
-            # LIMIT: Process max 3 pages to save memory
-            max_pages = min(len(pdf_reader.pages), 3)
-            
-            for i in range(max_pages):
-                page = pdf_reader.pages[i]
+            for page in pdf_reader.pages:
                 page_text = page.extract_text()
                 if page_text:
                     extracted_text += page_text + "\n\n"
@@ -80,21 +76,12 @@ class DocumentAnalysisService:
                 is_scanned = True
                 if OCR_SUPPORT:
                     # Convert PDF pages to images and OCR
-                    # LIMIT: Process max 2 pages for OCR (it's heavy)
-                    images = convert_from_bytes(pdf_bytes, first_page=1, last_page=2)
+                    images = convert_from_bytes(pdf_bytes)
                     for i, image in enumerate(images):
                         page_text = pytesseract.image_to_string(image)
                         extracted_text += f"--- Page {i+1} ---\n{page_text}\n\n"
-                        
-                    # Cleanup images
-                    del images
                 else:
                     extracted_text = "[PDF contains scanned images. OCR not available. Install pytesseract and pdf2image for OCR support.]"
-            
-            # Force cleanup
-            del pdf_reader
-            import gc
-            gc.collect()
             
             return extracted_text.strip(), is_scanned
             

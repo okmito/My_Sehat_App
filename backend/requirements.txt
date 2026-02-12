@@ -6,7 +6,6 @@
 # Core FastAPI Framework
 fastapi>=0.104.0
 uvicorn[standard]>=0.24.0
-gunicorn>=21.2.0
 pydantic>=2.0.0
 pydantic-settings>=2.0.0
 
@@ -41,6 +40,3 @@ pytz>=2023.3
 
 # Aiofiles for async file operations
 aiofiles>=23.2.0
-
-# Image Processing
-Pillow>=10.0.0

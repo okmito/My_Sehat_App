@@ -85,15 +85,11 @@ def start_internal_service(service_key: str, config: dict) -> subprocess.Popen:
     env = os.environ.copy()
     env["PYTHONPATH"] = str(BASE_DIR)
     
-    # Replace uvicorn with gunicorn for better process management and less memory overhead per worker
-    # We use uvicorn.workers.UvicornWorker class to run FastAPI apps
     cmd = [
-        sys.executable, "-m", "gunicorn",
+        sys.executable, "-m", "uvicorn",
         module,
-        "-k", "uvicorn.workers.UvicornWorker",
-        "-w", "1",           # 1 worker to save memory
-        "--threads", "1",    # 1 thread
-        "--bind", f"127.0.0.1:{port}",
+        "--host", "127.0.0.1",  # CRITICAL: localhost only, not 0.0.0.0
+        "--port", str(port),
         "--log-level", "warning"
     ]
     
