@@ -13,7 +13,7 @@ services:
     plan: free
     rootDir: backend
     buildCommand: pip install -r requirements.txt
-    startCommand: python start_all_backends.py
+    startCommand: gunicorn -k uvicorn.workers.UvicornWorker -w 1 --threads 2 --timeout 120 main:app
     envVars:
       - key: PYTHONPATH
         value: /opt/render/project/src/backend
