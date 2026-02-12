@@ -41,6 +41,3 @@ pytz>=2023.3
 
 # Aiofiles for async file operations
 aiofiles>=23.2.0
-
-# Image Processing
-Pillow>=10.0.0

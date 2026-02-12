@@ -16,7 +16,7 @@ class SOSRemoteDataSource {
     required double longitude,
     String emergencyType = 'Medical',
   }) async {
-    final response = await _dio.post('/sos/', data: {
+    final response = await _dio.post('/', data: {
       'user_id': userId,
       'latitude': latitude,
       'longitude': longitude,
@@ -26,7 +26,7 @@ class SOSRemoteDataSource {
   }
 
   Future<SOSEventModel> getSOSStatus(int sosId) async {
-    final response = await _dio.get('/sos/$sosId');
+    final response = await _dio.get('/$sosId');
     return SOSEventModel.fromJson(response.data as Map<String, dynamic>);
   }
 
@@ -34,7 +34,7 @@ class SOSRemoteDataSource {
     required double latitude,
     required double longitude,
   }) async {
-    final response = await _dio.get('/sos/hospitals/nearby', queryParameters: {
+    final response = await _dio.get('/hospitals/nearby', queryParameters: {
       'lat': latitude,
       'lon': longitude,
     });

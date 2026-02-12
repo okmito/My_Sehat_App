@@ -13,7 +13,7 @@ class ApiConfig {
   /// Set to true for Render production deployment
   /// Set to false for local development
   static const bool useProduction =
-      bool.fromEnvironment('PRODUCTION', defaultValue: false);
+      bool.fromEnvironment('PRODUCTION', defaultValue: true);
 
   /// Render Gateway URL (update this after deploying to Render)
   static const String renderGatewayUrl = 'https://mysehat-gateway.onrender.com';
@@ -41,19 +41,19 @@ class ApiConfig {
   // ============================================================================
 
   /// Auth API base URL (/auth/*)
-  static String get authUrl => gatewayUrl;
+  static String get authUrl => '$gatewayUrl/auth';
 
   /// Diagnostics API base URL (/diagnostics/*)
   static String get diagnosticsUrl => '$gatewayUrl/diagnostics';
 
-  /// Medicine Reminder API base URL (/medicine-reminder/*)
-  static String get medicineUrl => '$gatewayUrl/medicine-reminder';
+  /// Medicine Reminder API base URL (/medicine/*)
+  static String get medicineUrl => '$gatewayUrl/medicine';
 
   /// Mental Health API base URL (/mental-health/*)
   static String get mentalHealthUrl => '$gatewayUrl/mental-health';
 
   /// SOS Emergency API base URL (/sos/*)
-  static String get sosUrl => gatewayUrl;
+  static String get sosUrl => '$gatewayUrl/sos';
 
   /// FHIR API base URL (/fhir/*)
   static String get fhirUrl => '$gatewayUrl/fhir';
@@ -62,7 +62,7 @@ class ApiConfig {
   static String get healthRecordsUrl => '$gatewayUrl/health-records';
 
   /// DPDP/Consent API base URL (/api/v1/*)
-  static String get dpdpUrl => gatewayUrl;
+  static String get dpdpUrl => '$gatewayUrl/api/v1';
 
   // ============================================================================
   // LEGACY COMPATIBILITY (for gradual migration)
@@ -80,11 +80,11 @@ class ApiConfig {
 
   /// @deprecated Use [medicineUrl] instead
   static String get legacyMedicineUrl {
-    if (useProduction) return '$gatewayUrl/medicine-reminder';
-    if (kIsWeb) return 'http://localhost:8000/medicine-reminder';
+    if (useProduction) return '$gatewayUrl/medicine';
+    if (kIsWeb) return 'http://localhost:8000/medicine';
     if (!kIsWeb && Platform.isAndroid)
-      return 'http://10.0.2.2:8000/medicine-reminder';
-    return 'http://localhost:8000/medicine-reminder';
+      return 'http://10.0.2.2:8000/medicine';
+    return 'http://localhost:8000/medicine';
   }
 
   /// @deprecated Use [mentalHealthUrl] instead

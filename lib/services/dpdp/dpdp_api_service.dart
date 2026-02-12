@@ -209,7 +209,7 @@ class DpdpApiService {
   }) async {
     try {
       final response = await _dio.post(
-        '/api/v1/consent/grant',
+        '/consent/grant',
         data: {
           'user_id': userId,
           'data_category': _categoryToString(dataCategory),
@@ -247,7 +247,7 @@ class DpdpApiService {
   }) async {
     try {
       final response = await _dio.post(
-        '/api/v1/consent/revoke',
+        '/consent/revoke',
         data: {
           'user_id': userId,
           'data_category': _categoryToString(dataCategory),
@@ -276,7 +276,7 @@ class DpdpApiService {
   }) async {
     try {
       final response = await _dio.post(
-        '/api/v1/consent/check',
+        '/consent/check',
         data: {
           'user_id': userId,
           'data_category': _categoryToString(dataCategory),
@@ -308,7 +308,7 @@ class DpdpApiService {
   Future<List<ConsentRecord>> getMyConsents(String userId) async {
     try {
       final response = await _dio.get(
-        '/api/v1/consent/my',
+        '/consent/my',
         queryParameters: {'user_id': userId},
       );
 
@@ -335,7 +335,7 @@ class DpdpApiService {
   Future<UserDataExport> exportMyData(String userId) async {
     try {
       final response = await _dio.get(
-        '/api/v1/my-data',
+        '/my-data',
         queryParameters: {'user_id': userId},
       );
 
@@ -361,7 +361,7 @@ class DpdpApiService {
   Future<bool> deleteMyData(String userId) async {
     try {
       final response = await _dio.delete(
-        '/api/v1/my-data',
+        '/my-data',
         queryParameters: {'user_id': userId},
       );
 
@@ -385,7 +385,7 @@ class DpdpApiService {
   }) async {
     try {
       final response = await _dio.patch(
-        '/api/v1/my-data',
+        '/my-data',
         queryParameters: {'user_id': userId},
         data: {
           'field': fieldName,
@@ -417,7 +417,7 @@ class DpdpApiService {
   }) async {
     try {
       final response = await _dio.get(
-        '/api/v1/audit/my',
+        '/audit/my',
         queryParameters: {
           'user_id': userId,
           'limit': limit,
