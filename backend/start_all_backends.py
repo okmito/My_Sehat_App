@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """
 Start all backend services for My Sehat App - Render Compatible
 ================================================================
