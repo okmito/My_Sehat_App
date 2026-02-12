@@ -13,9 +13,9 @@ import sys
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from core.db import get_db
-from core.config import settings
-from models.schemas import (
+from health_record_backend.core.db import get_db
+from health_record_backend.core.config import settings
+from health_record_backend.models.schemas import (
     DocumentAnalysisResponse,
     HealthRecordResponse,
     HealthRecordListResponse,
@@ -29,8 +29,8 @@ from models.schemas import (
     StorageType,
     DocumentType
 )
-from services.document_analysis import document_analysis_service
-from services.health_record_service import health_record_service
+from health_record_backend.services.document_analysis import document_analysis_service
+from health_record_backend.services.health_record_service import health_record_service
 
 router = APIRouter(prefix="/health-records", tags=["Health Records"])
 
@@ -136,7 +136,7 @@ async def save_health_record(
         )
     except Exception:
         # Use provided data if analysis fails
-        from models.schemas import DocumentAnalysisResponse
+        from health_record_backend.models.schemas import DocumentAnalysisResponse
         analysis = DocumentAnalysisResponse(
             document_type=document_type,
             date=document_date,

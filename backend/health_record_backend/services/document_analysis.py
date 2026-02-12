@@ -14,8 +14,8 @@ import sys
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from core.config import settings
-from models.schemas import (
+from health_record_backend.core.config import settings
+from health_record_backend.models.schemas import (
     DocumentAnalysisResponse, 
     MedicationBase, 
     TestResultBase,

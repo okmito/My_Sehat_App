@@ -17,12 +17,12 @@ if str(parent_dir) not in sys.path:
     sys.path.insert(0, str(parent_dir))
 
 # Use consistent imports from current package
-from core.config import settings
-from core.db import Base, engine
-from routes.health_records import router as health_records_router
+from health_record_backend.core.config import settings
+from health_record_backend.core.db import Base, engine
+from health_record_backend.routes.health_records import router as health_records_router
 
 # Import models to register them
-from models.health_record import (
+from health_record_backend.models.health_record import (
     HealthRecord, 
     ExtractedMedication, 
     ExtractedTestResult,

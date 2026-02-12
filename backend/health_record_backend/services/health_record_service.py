@@ -11,21 +11,21 @@ import sys
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from models.health_record import (
+from health_record_backend.models.health_record import (
     HealthRecord, 
     ExtractedMedication, 
     ExtractedTestResult,
     CriticalHealthInfo,
     ConsentLog
 )
-from models.schemas import (
+from health_record_backend.models.schemas import (
     DocumentAnalysisResponse,
     HealthRecordCreate,
     StorageType,
     SearchRequest,
     CriticalInfoBase
 )
-from core.config import settings
+from health_record_backend.core.config import settings
 
 
 class HealthRecordService:
