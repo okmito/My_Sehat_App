@@ -37,8 +37,9 @@ async def lifespan(app: FastAPI):
     # Initialize Databases
     try:
         print("  |-- Initializing Auth DB...")
-        from auth_backend.database import init_db as init_auth_db
+        from auth_backend.database import init_db as init_auth_db, seed_database as seed_auth_db
         init_auth_db()
+        seed_auth_db()
         
         print("  |-- Initializing Diagnostics DB...")
         init_diagnostics_db()
