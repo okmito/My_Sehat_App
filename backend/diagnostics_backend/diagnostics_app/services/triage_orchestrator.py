@@ -7,10 +7,10 @@ from sqlalchemy.orm import Session
 # Add backend directory to path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent.parent))
 
-from services.vision_service import VisionService
-from services.reasoning_service import ReasoningService, CONFIRMATION_QUESTION, GENERAL_QUESTIONS
-from services.safety_service import SafetyService
-from services.session_service import SessionService
+from .vision_service import VisionService
+from .reasoning_service import ReasoningService, CONFIRMATION_QUESTION, GENERAL_QUESTIONS
+from .safety_service import SafetyService
+from .session_service import SessionService
 from diagnostics_backend.diagnostics_app.models.schemas import SessionCreate, MessageCreate, TriageResponse, Question, TriageOutputSchema
 from diagnostics_backend.diagnostics_app.db.models import TriageSession
 
