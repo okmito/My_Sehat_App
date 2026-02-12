@@ -5,7 +5,7 @@ from typing import Dict, Any, List
 # Add parent directory to path for relative imports
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from ..models.schemas import TriageOutputSchema, Question
+from models.schemas import TriageOutputSchema, Question
 
 # --- QUESTION TEMPLATES ---
 SYSTEMIC_QUESTIONS = [

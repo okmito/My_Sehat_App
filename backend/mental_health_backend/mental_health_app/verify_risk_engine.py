@@ -5,7 +5,7 @@ import os
 # Add the project root to the python path so we can import modules
 sys.path.append("c:/Honey/Projects/My_Sehat/BACKEND/mental_health_backend")
 
-from .services.risk_engine import calculate_risk_score, determinize_risk_level, get_actions, SELF_HARM_KEYWORDS
+from services.risk_engine import calculate_risk_score, determinize_risk_level, get_actions, SELF_HARM_KEYWORDS
 
 def test_risk_engine():
     print("Running Risk Engine Verification...")

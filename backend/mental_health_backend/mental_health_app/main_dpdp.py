@@ -287,7 +287,7 @@ def get_consent_status(user_id: str):
 # ============================================================================
 
 @app.post("/chat/message", response_model=ChatResponse)
-async def chat_message(
+def chat_message(
     request: ChatRequest,
     x_calling_service: Optional[str] = Header(None)
 ):
@@ -358,7 +358,7 @@ async def chat_message(
         )
 
     # 3. Get LLM Analysis with conversation context
-    llm_result = await ai_agent.analyze_message_llm(request.message, conversation_history)
+    llm_result = ai_agent.analyze_message_llm(request.message, conversation_history)
     
     # 4. Deterministic Risk Assessment
     kw_score, reasons = risk_engine.calculate_risk_score(request.message)
@@ -432,7 +432,7 @@ def get_checkin_questions(user_id: str):
 
 
 @app.post("/checkin/submit", response_model=CheckinSubmitResponse)
-async def submit_checkin(
+def submit_checkin(
     request: CheckinSubmitRequest,
     x_calling_service: Optional[str] = Header(None)
 ):
@@ -453,7 +453,7 @@ async def submit_checkin(
     allow_storage = prefs.get("allow_storage", True) if prefs else True
     
     # 1. Summarize with LLM
-    summary_result = await ai_agent.summarize_day_llm(request.answers)
+    summary_result = ai_agent.summarize_day_llm(request.answers)
     
     # 2. Save Daily Summary (if allowed)
     if allow_storage:
