@@ -21,7 +21,7 @@ def create_db_and_tables():
     print("[INFO] Initializing SOS Backend database...")
     try:
         # Import all models to register them with SQLModel
-        from .models import SOSEvent, UserEmergencyProfile
+        from sos_backend.models import SOSEvent, UserEmergencyProfile
         print("[OK] SOS models imported successfully")
         
         SQLModel.metadata.create_all(engine)

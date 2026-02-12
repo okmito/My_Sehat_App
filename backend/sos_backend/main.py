@@ -14,16 +14,8 @@ parent_dir = Path(__file__).parent.parent
 if str(parent_dir) not in sys.path:
     sys.path.insert(0, str(parent_dir))
 
-try:
-    from sos_backend.database import create_db_and_tables, get_session
-    from sos_backend.models import SOSEvent, SOSStatus, SOSCreate, UserEmergencyProfile
-except ImportError:
-    try:
-        from .database import create_db_and_tables, get_session
-        from .models import SOSEvent, SOSStatus, SOSCreate, UserEmergencyProfile
-    except ImportError:
-        from database import create_db_and_tables, get_session
-        from models import SOSEvent, SOSStatus, SOSCreate, UserEmergencyProfile
+from sos_backend.database import create_db_and_tables, get_session
+from sos_backend.models import SOSEvent, SOSStatus, SOSCreate, UserEmergencyProfile
 
 # DPDP Compliance imports
 try:
@@ -111,13 +103,7 @@ import json
 # Models already imported at top
 
 # Import additional models
-try:
-    from sos_backend.models import UserEmergencyProfile, EmergencyProfileUpdate, EmergencyDataResponse
-except ImportError:
-    try:
-        from .models import UserEmergencyProfile, EmergencyProfileUpdate, EmergencyDataResponse
-    except ImportError:
-        from models import UserEmergencyProfile, EmergencyProfileUpdate, EmergencyDataResponse
+from sos_backend.models import UserEmergencyProfile, EmergencyProfileUpdate, EmergencyDataResponse
 
 
 # ============================================================================
