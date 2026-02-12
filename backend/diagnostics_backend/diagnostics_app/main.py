@@ -36,7 +36,7 @@ try:
     DPDP_AVAILABLE = True
 except ImportError:
     DPDP_AVAILABLE = False
-    print("⚠️ DPDP module not available - running without privacy compliance")
+    print("[WARN] DPDP module not available - running without privacy compliance")
 from contextlib import asynccontextmanager
 
 # Database initialization function
@@ -56,7 +56,7 @@ except ImportError as e:
 # Database initialization function
 def init_db():
     """Initialize database tables with robust error handling (Iterative Strategy)."""
-    print("🔧 Initializing Diagnostics Backend database...", flush=True)
+    print("[INFO] Initializing Diagnostics Backend database...", flush=True)
     try:
         # Step 1: Inspect existing state
         from sqlalchemy import inspect

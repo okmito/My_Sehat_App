@@ -10,11 +10,24 @@ _parent_dir = Path(__file__).resolve().parent.parent.parent.parent
 if str(_parent_dir) not in sys.path:
     sys.path.insert(0, str(_parent_dir))
 
-from medicine_backend.medicine_app.core.db import get_db
-from medicine_backend.medicine_app.models.medication import Medication
-from medicine_backend.medicine_app.models.schedule import MedicationSchedule
-from medicine_backend.medicine_app.schemas.medication import MedicationCreate, MedicationUpdate, Medication as MedicationSchema
-from medicine_backend.medicine_app.schemas.schedule import ScheduleCreate, ScheduleUpdate, Schedule as ScheduleSchema
+try:
+    from medicine_backend.medicine_app.core.db import get_db
+except ImportError:
+    try:
+        from core.db import get_db
+    except ImportError:
+        from backend.medicine_backend.medicine_app.core.db import get_db
+
+try:
+    from medicine_backend.medicine_app.models.medication import Medication
+    from medicine_backend.medicine_app.models.schedule import MedicationSchedule
+    from medicine_backend.medicine_app.schemas.medication import MedicationCreate, MedicationUpdate, Medication as MedicationSchema
+    from medicine_backend.medicine_app.schemas.schedule import ScheduleCreate, ScheduleUpdate, Schedule as ScheduleSchema
+except ImportError:
+    from models.medication import Medication
+    from models.schedule import MedicationSchedule
+    from schemas.medication import MedicationCreate, MedicationUpdate, Medication as MedicationSchema
+    from schemas.schedule import ScheduleCreate, ScheduleUpdate, Schedule as ScheduleSchema
 
 router = APIRouter(prefix="/medications", tags=["Medications"])
 

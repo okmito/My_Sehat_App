@@ -20,7 +20,7 @@ def get_db_connection():
 
 def init_db():
     """Initialize database tables with error handling."""
-    print("🔧 Initializing Mental Health Backend database...")
+    print("[INFO] Initializing Mental Health Backend database...")
     try:
         conn = get_db_connection()
         c = conn.cursor()
@@ -66,10 +66,10 @@ def init_db():
         conn.commit()
         conn.close()
         
-        print(f"✓ Mental Health database tables created successfully at: {DB_NAME}")
-        print("✓ Available Mental Health tables: messages, risk_events, daily_summaries")
+        print(f"[OK] Mental Health database tables created successfully at: {DB_NAME}")
+        print("[OK] Available Mental Health tables: messages, risk_events, daily_summaries")
     except Exception as e:
-        print(f"❌ Failed to create Mental Health database tables: {e}")
+        print(f"[ERROR] Failed to create Mental Health database tables: {e}")
         raise
 
 # Helper functions for persistence

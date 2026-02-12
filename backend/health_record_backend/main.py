@@ -42,25 +42,25 @@ try:
     DPDP_AVAILABLE = True
 except ImportError:
     DPDP_AVAILABLE = False
-    print("⚠️ DPDP module not available - running without central privacy compliance")
+    print("[WARN] DPDP module not available - running without central privacy compliance")
 
 from contextlib import asynccontextmanager
 
 # Database initialization function
 def init_db():
     """Initialize database tables on startup."""
-    print("🔧 Initializing Health Records Backend database...")
+    print("[INFO] Initializing Health Records Backend database...")
     try:
         Base.metadata.create_all(bind=engine)
-        print(f"✓ Health Records database tables created successfully")
+        print(f"[OK] Health Records database tables created successfully")
         
         # List all tables
         from sqlalchemy import inspect
         inspector = inspect(engine)
         tables = inspector.get_table_names()
-        print(f"✓ Available Health Records tables: {', '.join(tables)}")
+        print(f"[OK] Available Health Records tables: {', '.join(tables)}")
     except Exception as e:
-        print(f"❌ Failed to create Health Records database tables: {e}")
+        print(f"[ERROR] Failed to create Health Records database tables: {e}")
         raise
 
 # Lifespan context manager

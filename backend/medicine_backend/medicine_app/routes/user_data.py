@@ -16,11 +16,26 @@ from datetime import datetime
 # Add parent directory to path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from core.db import get_db
-from models.medication import Medication
-from models.schedule import MedicationSchedule
-from models.prescription import Prescription
-from models.dose_event import DoseEvent
+try:
+    from medicine_backend.medicine_app.core.db import get_db
+except ImportError:
+    # Fallback
+    try:
+        from core.db import get_db
+    except ImportError:
+         # Try full path from root
+        from backend.medicine_backend.medicine_app.core.db import get_db
+
+try:
+    from medicine_backend.medicine_app.models.medication import Medication
+    from medicine_backend.medicine_app.models.schedule import MedicationSchedule
+    from medicine_backend.medicine_app.models.prescription import Prescription
+    from medicine_backend.medicine_app.models.dose_event import DoseEvent
+except ImportError:
+    from models.medication import Medication
+    from models.schedule import MedicationSchedule
+    from models.prescription import Prescription
+    from models.dose_event import DoseEvent
 
 # DPDP Compliance imports
 try:

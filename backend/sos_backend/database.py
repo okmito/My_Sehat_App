@@ -18,22 +18,22 @@ engine = create_engine(sqlite_url, connect_args=connect_args)
 
 def create_db_and_tables():
     """Initialize database tables with error handling."""
-    print("🔧 Initializing SOS Backend database...")
+    print("[INFO] Initializing SOS Backend database...")
     try:
         # Import all models to register them with SQLModel
         from .models import SOSEvent, UserEmergencyProfile
-        print("✓ SOS models imported successfully")
+        print("[OK] SOS models imported successfully")
         
         SQLModel.metadata.create_all(engine)
-        print(f"✓ SOS database tables created successfully at: {sqlite_url}")
+        print(f"[OK] SOS database tables created successfully at: {sqlite_url}")
         
         # List all tables that were created
         from sqlalchemy import inspect
         inspector = inspect(engine)
         tables = inspector.get_table_names()
-        print(f"✓ Available SOS tables: {', '.join(tables)}")
+        print(f"[OK] Available SOS tables: {', '.join(tables)}")
     except Exception as e:
-        print(f"❌ Failed to create SOS database tables: {e}")
+        print(f"[ERROR] Failed to create SOS database tables: {e}")
         raise
 
 def get_session():

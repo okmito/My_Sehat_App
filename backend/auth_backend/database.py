@@ -35,7 +35,7 @@ def get_db() -> Generator[Session, None, None]:
 def init_db():
     """Initialize database tables"""
     Base.metadata.create_all(bind=engine)
-    print(f"✅ Auth database initialized at {DB_PATH}")
+    print(f"[OK] Auth database initialized at {DB_PATH}")
 
 
 def seed_database():
@@ -57,7 +57,7 @@ def seed_database():
         ])).count()
         
         if existing >= 4:
-            print("✅ Seed users already exist, skipping seeding")
+            print("[OK] Seed users already exist, skipping seeding")
             return
         
         # Define seed users
@@ -171,7 +171,7 @@ def seed_database():
             ).first()
             
             if existing_user:
-                print(f"⏭️  User {user_data['name']} already exists, skipping")
+                print(f"[SKIP] User {user_data['name']} already exists, skipping")
                 continue
             
             # Create user
@@ -207,14 +207,14 @@ def seed_database():
                 )
                 db.add(consent)
             
-            print(f"✅ Created seed user: {user_data['name']} ({user_data['phone_number']})")
+            print(f"[OK] Created seed user: {user_data['name']} ({user_data['phone_number']})")
         
         db.commit()
-        print("\n🌱 Database seeding completed!")
+        print("\n[OK] Database seeding completed!")
         
     except Exception as e:
         db.rollback()
-        print(f"❌ Error seeding database: {e}")
+        print(f"[ERROR] Error seeding database: {e}")
         raise
     finally:
         db.close()

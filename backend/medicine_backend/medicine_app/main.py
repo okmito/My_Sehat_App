@@ -36,7 +36,7 @@ try:
     DPDP_AVAILABLE = True
 except ImportError:
     DPDP_AVAILABLE = False
-    print("⚠️ DPDP module not available - running without privacy compliance")
+    print("[WARN] DPDP module not available - running without privacy compliance")
 
 # CRITICAL: Import all models at module level so they register with Base.metadata
 # This MUST happen before init_db() is called
