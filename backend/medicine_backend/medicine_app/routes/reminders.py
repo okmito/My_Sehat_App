@@ -48,7 +48,7 @@ def get_todays_reminders(
     
     # Let's get "Start of today" to "End of today" in user timezone?
     # Simpler: just get events where scheduled_at.date() == today
-    from services.reminder_service import get_current_time
+    from medicine_backend.medicine_app.services.reminder_service import get_current_time
     now = get_current_time()
     today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
     today_end = now.replace(hour=23, minute=59, second=59, microsecond=999)
@@ -85,7 +85,7 @@ def get_next_reminders(
 ):
     process_missed_doses(db, user_id)
     
-    from services.reminder_service import get_current_time
+    from medicine_backend.medicine_app.services.reminder_service import get_current_time
     now = get_current_time()
     
     # Get future pending reminders
