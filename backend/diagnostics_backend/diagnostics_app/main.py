@@ -42,15 +42,16 @@ from contextlib import asynccontextmanager
 # Database initialization function
 # CRITICAL: Import all models at module level so they register with Base.metadata
 # This MUST happen before init_db() is called
+# CRITICAL: Import all models at module level so they register with Base.metadata
+# This MUST happen before init_db() is called
+# Enforce package imports to match services/session_service.py and prevent "Multiple classes found"
 try:
     from diagnostics_backend.diagnostics_app.db.models import TriageSession, TriageMessage, TriageObservation, MediaAsset, TriageOutput
     print("[OK] Models imported successfully (package style)", flush=True)
-except ImportError:
-    try:
-        from db.models import TriageSession, TriageMessage, TriageObservation, MediaAsset, TriageOutput
-        print("[OK] Models imported successfully (local style)", flush=True)
-    except Exception as e:
-        print(f"[WARN] Failed to import models: {e}", flush=True)
+except ImportError as e:
+    print(f"[ERR] Failed to import models via package path: {e}", flush=True)
+    # Raising error here is better than falling back and causing confusing registry errors later
+    raise
 
 # Database initialization function
 def init_db():

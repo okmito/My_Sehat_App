@@ -6,13 +6,14 @@ from sqlalchemy import Column, String, Integer, DateTime, Text, JSON, ForeignKey
 from sqlalchemy.orm import relationship
 
 # Robust import for Base to prevent split metadata
+# Robust import for Base to prevent split metadata
+# Enforce package path so Base is consistent
 try:
     from diagnostics_backend.diagnostics_app.db.base import Base
 except ImportError:
-    try:
-        from diagnostics_app.db.base import Base
-    except ImportError:
-        from db.base import Base
+    # If package import fails, it means sys.path isn't set up correctly (likely running file directly)
+    # Re-raising is safer than fallback which causes split metadata
+    raise
 
 class TriageSession(Base):
     __tablename__ = "triage_sessions"
