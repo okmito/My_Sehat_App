@@ -70,7 +70,7 @@ class AuthApiService {
   }) async {
     try {
       final response = await http.post(
-        Uri.parse('$baseUrl/signup'),
+        Uri.parse('$baseUrl/auth/signup'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           'name': name,
@@ -122,7 +122,7 @@ class AuthApiService {
   }) async {
     try {
       final response = await http.post(
-        Uri.parse('$baseUrl/login'),
+        Uri.parse('$baseUrl/auth/login'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           'phone_number': phoneNumber,
@@ -165,7 +165,7 @@ class AuthApiService {
       }
 
       final response = await http.get(
-        Uri.parse('$baseUrl/validate'),
+        Uri.parse('$baseUrl/auth/validate'),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $token',
@@ -210,7 +210,7 @@ class AuthApiService {
       final token = await getStoredToken();
       if (token != null) {
         await http.post(
-          Uri.parse('$baseUrl/logout'),
+          Uri.parse('$baseUrl/auth/logout'),
           headers: {
             'Content-Type': 'application/json',
             'Authorization': 'Bearer $token',
@@ -233,7 +233,7 @@ class AuthApiService {
       if (token == null) return null;
 
       final response = await http.get(
-        Uri.parse('$baseUrl/me'),
+        Uri.parse('$baseUrl/auth/me'),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $token',
@@ -277,7 +277,7 @@ class AuthApiService {
       if (darkMode != null) updates['dark_mode'] = darkMode;
 
       final response = await http.put(
-        Uri.parse('$baseUrl/preferences'),
+        Uri.parse('$baseUrl/auth/preferences'),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $token',
@@ -302,7 +302,7 @@ class AuthApiService {
       if (token == null) return false;
 
       final response = await http.put(
-        Uri.parse('$baseUrl/consents/$consentId'),
+        Uri.parse('$baseUrl/auth/consents/$consentId'),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $token',

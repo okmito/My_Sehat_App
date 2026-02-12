@@ -16,7 +16,7 @@ class DoseEvent(DoseEventBase):
     medication_name: Optional[str] = None  # Added for display purposes
     strength: Optional[str] = None  # Added for display purposes
     scheduled_at: datetime
-    updated_at: Optional[datetime] = None
+    updated_at: datetime
     taken_at: Optional[datetime] = None
 
     class Config:

@@ -13,7 +13,7 @@ if str(_parent_dir) not in sys.path:
 from medicine_backend.medicine_app.core.db import get_db
 from medicine_backend.medicine_app.models.dose_event import DoseEvent
 from medicine_backend.medicine_app.models.medication import Medication
-from medicine_backend.medicine_app.services.reminder_service import generate_dose_events, process_missed_doses, get_current_time
+from medicine_backend.medicine_app.services.reminder_service import generate_dose_events, process_missed_doses
 from medicine_backend.medicine_app.schemas.dose_event import DoseEvent as DoseEventSchema, DoseEventUpdate
 
 router = APIRouter(tags=["Reminders"])
@@ -41,6 +41,14 @@ def get_todays_reminders(
     process_missed_doses(db, user_id)
     
     # Filter for today
+    # Assuming "today" means local time date match
+    # Or just return pending/today events?
+    # Simple approach: Return all pending or recent?
+    # Requirement: "GET /reminders/today"
+    
+    # Let's get "Start of today" to "End of today" in user timezone?
+    # Simpler: just get events where scheduled_at.date() == today
+    from services.reminder_service import get_current_time
     now = get_current_time()
     today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
     today_end = now.replace(hour=23, minute=59, second=59, microsecond=999)
@@ -77,6 +85,7 @@ def get_next_reminders(
 ):
     process_missed_doses(db, user_id)
     
+    from services.reminder_service import get_current_time
     now = get_current_time()
     
     # Get future pending reminders
